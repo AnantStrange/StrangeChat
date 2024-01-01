@@ -1,0 +1,79 @@
+html, body {
+    color: rgb( 209, 205, 199);
+    background-color: rgb( 24, 26, 27);
+    height: 100%;
+}
+
+body {
+    position: relative;
+}
+
+body:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    background-image: url('images/skeletons.png');
+    opacity: 0.1;
+}
+
+body > * {
+    position: relative;
+    z-index: 2;
+}
+
+*, p {
+    margin: 0px 0px;
+    box-sizing: border-box;
+}
+
+h1{
+    font-size:100px;
+}
+
+header {
+    margin: 50px auto;
+    text-align: center;
+}
+
+
+label{
+    display:block;
+}
+input {
+    color: white;
+    display:block;
+    background-color: rgb( 59, 59, 59);
+    border-radius: 6px;
+}
+
+.box {
+    font-size: 20px;
+    padding: 31px 57px;
+    border: 2px soild blue;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 50% 50%;
+    width: 580px;
+    margin: 30px auto;
+    border: 3px solid purple;
+    border-radius: 10px;
+}
+ 
+.grid-col-span-2{
+    grid-column:span 2;
+}
+
+select,button,p{
+    display:block;
+    width:fit-content;
+    margin:auto; 
+}
+
+
+
+
+

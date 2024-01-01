@@ -2,7 +2,7 @@
 
 $server = "localhost";
 $user = "StrangeChat";
-$pass = "Strange";
+$pass = "StrangeChat";
 $db = "StrangeChat";
 
 $conn = mysqli_connect($server,$user,$pass,$db);

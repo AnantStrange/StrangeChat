@@ -1,67 +1,81 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-
+    <link rel="stylesheet" href="/home.css">
     <title>Home Page</title>
-  </head>
-  <body>
-<?php 
+</head>
 
-$root = $_SERVER['DOCUMENT_ROOT'];
-require_once($root."/components/navbar.php");
+<body>
+    <?php
 
-if($_SERVER["REQUEST_METHOD"] == "POST"){
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    require_once($root . "/components/navbar.php");
 
-    require_once("./dbconnect.php");
-    $username = $_POST["username"];
-    $password = $_POST["password"];
-    $cpassword = $_POST["cpassword"];
+    if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-    if($password != $cpassword){
-        echo '<div class="alert alert-danger" role="alert">
+        require_once("./dbconnect.php");
+        $username = $_POST["username"];
+        $password = $_POST["password"];
+        $cpassword = $_POST["cpassword"];
+
+        if ($password != $cpassword) {
+            echo '<div class="alert alert-danger" role="alert">
             Passwords do not match !
             </div>';
-    }
-    else{
-        $user_exist = "select username from users where username='$username'";
-        $result = mysqli_query($conn,$user_exist);
-        if(mysqli_num_rows($result) > 0){
-            echo '<div class="alert alert-danger" role="alert">
+        } else {
+            $user_exist = "select username from users where username='$username'";
+            $result = mysqli_query($conn, $user_exist);
+            if (mysqli_num_rows($result) > 0) {
+                echo '<div class="alert alert-danger" role="alert">
                 User Already exists
                 </div>';
-        }
-        else{
-            $sql = "insert into users (username,password,dt) values('$username','$password',current_timestamp())";
-            $sql_result = mysqli_query($conn,$sql);
-            if($sql_result){
-                echo '<div class="alert alert-success" role="alert">
+            } else {
+                $pass_hash = password_hash($password, PASSWORD_BCRYPT, [21]);
+                $sql = "insert into users (username,password,dt) values('$username','$pass_hash',current_timestamp())";
+                $sql_result = mysqli_query($conn, $sql);
+                if ($sql_result) {
+                    echo '<div class="alert alert-success" role="alert">
                     User Registered
                     </div>';
+                }
             }
         }
     }
-}
 
-?>
-<form action="./signup.php" method="post">
-  <div class="form-group">
-    <label for="username">UserName</label>
-    <input type="text" name="username" class="form-control" id="username_input" placeholder="Enter UserName">
-  </div>
-  <div class="form-group">
-    <label for="pasword">Password</label>
-    <input type="password" name="password" class="form-control" id="pass_input" placeholder="Password">
-  </div>
-  <div class="form-group">
-    <label for="cpassword">Password</label>
-    <input type="password" name="cpassword" class="form-control" id="cpass_input" placeholder="Password">
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
+    ?>
+    <header>
+        <h1>StrangeChat</h1>
+    </header>
+    <form action="./signup.php" method="post">
+        <div class="box">
+                <label for="username">Nickname :</label>
+                <input type="text" id="username" name="username" placeholder="Enter UserName" autocomplete="username"></input>
+
+                <label for="password">Password :</label>
+                <input type="password" id="password" name="password" placeholder="Enter Password" autocomplete="current-password"></input>
+
+                <label for="cpassword">Renter Password :</label>
+                <input type="password" id="cpassword" name="cpassword" placeholder="Enter Password" autocomplete="current-password"></input>
+                
+                <label for="captcha">Captcha :</label>
+                <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
+
+                <p class="grid-col-span-2">Pick a Color</p>
+                <select name="cars" id="cars" class="grid-col-span-2">
+                    <option value="volvo">color1</option>
+                    <option value="saab">color2</option>
+                    <option value="mercedes">color3</option>
+                    <option value="audi">color4</option>
+                </select>
+                <button type="submit" class="grid-col-span-2">Enter Chat</button>
+
+        </div>
+    </form>
 
 
 
@@ -74,7 +88,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-  </body>
+</body>
+
 </html>
-
-
