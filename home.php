@@ -12,6 +12,13 @@
 
 <body>
     <?php
+    session_start();
+    $_SESSION['loggedIn'] = false;
+    if (session_status() == PHP_SESSION_ACTIVE && !empty(session_id())) {
+        echo "There is an active session.";
+    } else {
+        echo "No active session.";
+    }
 
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/components/navbar.php");
@@ -27,16 +34,27 @@
             echo '<div class="alert alert-danger" role="alert">
                 User Does Not exists
                 </div>';
-        }
-        else {
+        } else {
             $pass_hash = $pass_hash->fetch_assoc()['password'];
-            if(password_verify($password,$pass_hash)){
+            if (password_verify($password, $pass_hash)) {
                 echo '<div class="alert alert-success" role="alert">
                     User Registered
                     </div>';
-                session_start();
                 $_SESSION['userName'] = $username;
-                header("location:chat.php");
+                $_SESSION['loggedIn'] = true;
+
+                $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = '$username'";
+                $result = mysqli_query($conn, $user_check_sql);
+
+                if (mysqli_num_rows($result) == 0) {
+                    $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES ('$username')";
+                    mysqli_query($conn, $user_insert_sql);
+                }
+                header("location:/chat.php");
+            } else {
+                echo '<div class="alert alert-danger" role="alert">
+                        Wrong Password
+                        </div>';
             }
         }
     }
