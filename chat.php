@@ -36,21 +36,14 @@
     </div>
     <div class="midsec">
         <div id="chat_message_iframe">
-            <iframe name="view" src="/chat_message_iframe.php"></iframe>
+            <iframe src="/chat_message_iframe.php"></iframe>
+        </div>
+
+        <div id="chat_aside_iframe">
+            <iframe src="/chat_aside_iframe.php"></iframe>
         </div>
 
 
-        <aside>
-            Users:
-            <?php
-            require_once($root . "/partials/_dbconnect.php");
-            $msg_query = "select username from users_logged_in";
-            $result = mysqli_query($conn, $msg_query);
-            while ($row = $result->fetch_assoc()) {
-                echo "<p class='user_list_p'>" . $row['username'] . "</p>";
-            }
-            ?>
-        </aside>
     </div>
 
 
