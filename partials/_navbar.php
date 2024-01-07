@@ -1,8 +1,4 @@
 <?php
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
     header("Location: /home.php");
     exit();
@@ -26,12 +22,15 @@ echo "
 if (!isset($_SESSION['userName'])) {
     echo "
       <li class='nav-item'>
-        <a class='nav-link' href='/login_system/signup.php'>Sign Up</a>
+        <a class='nav-link' href='/signup.php'>Sign Up</a>
     </li>";
 } elseif (isset($_SESSION['userName'])) {
     echo "
       <li class='nav-item'>
-        <a class='nav-link' href='/login_system/logout.php'>Log out</a>
+        <a class='nav-link' href='/chat.php'>Chat</a>
+      </li>
+      <li class='nav-item'>
+        <a class='nav-link' href='/logout.php'>Log out</a>
       </li>
     ";
 }
