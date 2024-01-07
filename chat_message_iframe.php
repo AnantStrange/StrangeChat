@@ -25,6 +25,7 @@
     while ($row = $result->fetch_assoc()) {
         $para = "<p class='user_messages'><span class='message-info'>" . $row['dt'] . " : " . $row['sender'] . '</span> - <span class="message-text">' . $row['text'] . "</span></p>";
         echo $para;
+        echo "<hr>";
     }
 
 

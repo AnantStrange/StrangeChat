@@ -1,3 +1,12 @@
+body {
+  padding: 10px;
+    /* font-size : 16px; */
+}
+
+.user_messages{
+    margin:7px 0px;
+}
+
 .message-info {
   margin-right: 10px;
 }
