@@ -7,6 +7,7 @@
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
+    <link rel="stylesheet" href="/css/home.css" class="css">
     <title>Home Page</title>
 </head>
 
@@ -18,7 +19,7 @@
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-        require_once("./dbconnect.php");
+        require_once($root . "/partials/_dbconnect.php");
         $username = $_POST["username"];
         $password = $_POST["password"];
         $cpassword = $_POST["cpassword"];
@@ -40,9 +41,10 @@
                 $sql_result = mysqli_query($conn, $sql);
                 if ($sql_result) {
                     echo '<div class="alert alert-success" role="alert">
-                    User Registered
+                    User Registered. You can now login
                     </div>';
-                header("location:/home.php");
+                    echo '<meta http-equiv="refresh" content="3;url=/home.php">';
+                    header("location:/home.php");
                 }
             }
         }
@@ -54,26 +56,26 @@
     </header>
     <form action="./signup.php" method="post">
         <div class="box">
-                <label for="username">Nickname :</label>
-                <input type="text" id="username" name="username" placeholder="Enter UserName" autocomplete="username"></input>
+            <label for="username">Nickname :</label>
+            <input type="text" id="username" name="username" placeholder="Enter UserName" autocomplete="username"></input>
 
-                <label for="password">Password :</label>
-                <input type="password" id="password" name="password" placeholder="Enter Password" autocomplete="current-password"></input>
+            <label for="password">Password :</label>
+            <input type="password" id="password" name="password" placeholder="Enter Password" autocomplete="current-password"></input>
 
-                <label for="cpassword">Renter Password :</label>
-                <input type="password" id="cpassword" name="cpassword" placeholder="Enter Password" autocomplete="current-password"></input>
-                
-                <label for="captcha">Captcha :</label>
-                <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
+            <label for="cpassword">Renter Password :</label>
+            <input type="password" id="cpassword" name="cpassword" placeholder="Enter Password" autocomplete="current-password"></input>
 
-                <p class="grid-col-span-2">Pick a Color</p>
-                <select name="cars" id="cars" class="grid-col-span-2">
-                    <option value="volvo">color1</option>
-                    <option value="saab">color2</option>
-                    <option value="mercedes">color3</option>
-                    <option value="audi">color4</option>
-                </select>
-                <button type="submit" class="grid-col-span-2">Enter Chat</button>
+            <label for="captcha">Captcha :</label>
+            <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
+
+            <p class="grid-col-span-2">Pick a Color</p>
+            <select name="cars" id="cars" class="grid-col-span-2">
+                <option value="volvo">color1</option>
+                <option value="saab">color2</option>
+                <option value="mercedes">color3</option>
+                <option value="audi">color4</option>
+            </select>
+            <button type="submit" class="grid-col-span-2">Enter Chat</button>
 
         </div>
     </form>

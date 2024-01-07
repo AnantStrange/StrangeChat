@@ -1,6 +1,4 @@
 html, body {
-    color: rgb( 209, 205, 199);
-    background-color: rgb( 24, 26, 27);
     height: 100%;
 }
 
@@ -25,12 +23,6 @@ body > * {
     z-index: 2;
 }
 
-*, p {
-    }
-    margin: 0px 0px;
-    box-sizing: border-box;
-}
-
 h1{
     font-size:100px;
 }
@@ -41,12 +33,7 @@ header {
 }
 
 
-label{
-    display:block;
-}
 input {
-    color: white;
-    display:block;
     background-color: rgb( 59, 59, 59);
     border-radius: 6px;
 }
@@ -54,7 +41,6 @@ input {
 .box {
     font-size: 20px;
     padding: 31px 57px;
-    border: 2px soild blue;
     display: grid;
     gap: 20px;
     grid-template-columns: 50% 50%;
@@ -69,7 +55,8 @@ input {
 }
 
 select,button,p{
-    display:block;
+    background-color: rgb( 59, 59, 59);
+    padding: 0px 6px;
     width:fit-content;
     margin:auto; 
 }

@@ -1,3 +1,8 @@
+html{
+    background-color: #181a1b;
+    color:#FFFFFF;
+}
+
 #chat_header_iframe {
     height:83px;
 }
@@ -9,6 +14,11 @@
 
 #chat_message_iframe {
     width: 80%;
+    height: 100%;
+}
+
+#chat_aside_iframe {
+    width: 20%;
     height: 100%;
 }
 
