@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="/css/bootstrap.min.css" >
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/chat.css" class="css">
     <title>Home Page</title>
@@ -14,7 +14,6 @@
 <body>
 
     <?php
-
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
@@ -22,9 +21,15 @@
         header("location:/home.php");
         exit();
     }
+
     $root = $_SERVER['DOCUMENT_ROOT'];
     $username = $_SESSION['userName'];
     require($root . "/partials/_navbar.php");
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'settings') {
+        header('Location: $root/settings.php');
+        exit;
+    }
 
 
     ?>
@@ -44,6 +49,12 @@
         </div>
 
 
+    </div>
+
+    <div id="footer">
+        <form method="post" action="">
+            <button type="submit" name="action" value="settings">Settings</button>
+        </form>
     </div>
 
 
