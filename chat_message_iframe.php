@@ -21,9 +21,24 @@
     require_once($root . "/partials/_dbconnect.php");
 
     $sql = "Select * from messages";
-    $result = mysqli_query($conn, $sql);
-    while ($row = $result->fetch_assoc()) {
-        $para = "<p class='user_messages'><span class='message-info'>" . $row['dt'] . " : " . $row['sender'] . '</span> - <span class="message-text">' . $row['text'] . "</span></p>";
+    $messages = mysqli_query($conn, $sql);
+    while ($row = $messages->fetch_assoc()) {
+
+        $sql = "SELECT * FROM user_settings WHERE username='" . $row['sender'] . "'";
+        $result = mysqli_query($conn, $sql);
+        $color = "";
+        if (mysqli_num_rows($result) == 1) {
+            $result = $result->fetch_assoc();
+            $color = $result['color'];
+        }
+
+        $style = ($color !== '') ? "style='color: $color;'" : ''; // Apply user-specific color if available
+
+        $para = "<p class='user_messages'>
+            <span class='msg-dt'>" . $row['dt'] . " :</span>
+            <span class='msg-sender' $style>" . $row['sender'] . " -</span>
+            <span class='msg-text'>" . $row['text'] . "</span>
+        </p>";
         echo $para;
         echo "<hr>";
     }

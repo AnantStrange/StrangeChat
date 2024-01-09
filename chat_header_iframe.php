@@ -7,8 +7,9 @@
 
 
 <style>
-    html,
     body {
+        background-color: #181a1b;
+        color: white;
         height: fit-content;
         margin-top: 4px;
         margin-bottom: 4px;
@@ -19,21 +20,17 @@
         display: block;
         width: fit-content;
         margin: 0px auto;
-        /* border: 2px solid pink; */
-        /* background-color: purple; */
     }
 
-
-    input,
-    select {
-        color: #000000;
-        /* background-color: #000000 */
+    input,button,select{
+        color : black;
     }
 
     .delbutton {
         color: white;
         background-color: #660000
     }
+
 </style>
 
 <?php
