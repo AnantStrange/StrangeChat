@@ -27,7 +27,7 @@
     require($root . "/partials/_navbar.php");
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'settings') {
-        header('Location: $root/settings.php');
+        header('Location: settings.php');
         exit;
     }
 
@@ -52,7 +52,7 @@
     </div>
 
     <div id="footer">
-        <form method="post" action="">
+        <form method="post">
             <button type="submit" name="action" value="settings">Settings</button>
         </form>
     </div>

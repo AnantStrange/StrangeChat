@@ -14,17 +14,32 @@ if (session_status() === PHP_SESSION_NONE) {
 $root = $_SERVER['DOCUMENT_ROOT'];
 $username = $_SESSION['userName'];
 
+function printUserListByRole($conn, $role)
+{
+    $query = "SELECT u.username FROM users u JOIN users_logged_in uli ON u.username = uli.username WHERE u.role = '$role'";
+    $result = mysqli_query($conn, $query);
+
+
+    if (mysqli_num_rows($result) > 0) {
+        echo "<h3>". ucfirst($role) ."s</h3>";
+        while ($row = $result->fetch_assoc()) {
+            echo "<p class='user_list_p'>" . $row['username'] . "</p>";
+            echo "<hr>";
+        }
+        echo "<br><br>";
+    }
+}
+
 ?>
 
 <aside>
-    <h3>Users:</h3>
     <?php
     require_once($root . "/partials/_dbconnect.php");
-    $msg_query = "select username from users_logged_in";
-    $result = mysqli_query($conn, $msg_query);
-    while ($row = $result->fetch_assoc()) {
-        echo "<p class='user_list_p'>" . $row['username'] . "</p>";
-        echo "<hr>";
+    $roles = ['admin', 'staff', 'mod', 'member', 'guest'];
+
+    foreach ($roles as $role) {
+        printUserListByRole($conn, $role);
     }
+
     ?>
 </aside>

@@ -23,28 +23,40 @@
         $username = $_POST["username"];
         $password = $_POST["password"];
         $cpassword = $_POST["cpassword"];
+        $role = $_POST["role"];
 
-        if ($password != $cpassword) {
+        if ($entered_captcha != $captcha) {
             echo '<div class="alert alert-danger" role="alert">
+                Captcha Wrong!
+                </div>';
+        } else {
+
+            if ($password != $cpassword) {
+                echo '<div class="alert alert-danger" role="alert">
             Passwords do not match !
             </div>';
-        } else {
-            $user_exist = "select username from users where username='$username'";
-            $result = mysqli_query($conn, $user_exist);
-            if (mysqli_num_rows($result) > 0) {
-                echo '<div class="alert alert-danger" role="alert">
+            } else {
+                $user_exist = "select username from users where username='$username'";
+                $result = mysqli_query($conn, $user_exist);
+                if (mysqli_num_rows($result) > 0) {
+                    echo '<div class="alert alert-danger" role="alert">
                 User Already exists
                 </div>';
-            } else {
-                $pass_hash = password_hash($password, PASSWORD_BCRYPT, [21]);
-                $sql = "insert into users (username,password,dt) values('$username','$pass_hash',current_timestamp())";
-                $sql_result = mysqli_query($conn, $sql);
-                if ($sql_result) {
-                    echo '<div class="alert alert-success" role="alert">
+                } else {
+                    $pass_hash = password_hash($password, PASSWORD_BCRYPT, [21]);
+                    $sql = "insert into users (username,password,role,dt) values('$username','$pass_hash','$role',current_timestamp())";
+                    $sql_result = mysqli_query($conn, $sql);
+                    if ($sql_result) {
+                        echo '<div class="alert alert-success" role="alert">
                     User Registered. You can now login
                     </div>';
-                    echo '<meta http-equiv="refresh" content="3;url=/home.php">';
-                    header("location:/home.php");
+                        echo '<meta http-equiv="refresh" content="3;url=/home.php">';
+                        header("location:/home.php");
+                    } else {
+                        echo '<div class="alert alert-danger" role="alert">
+                        Error: Unable to register user. Please try again. ' . mysqli_error($conn) . '
+                      </div>';
+                    }
                 }
             }
         }
@@ -65,10 +77,32 @@
             <label for="cpassword">Renter Password :</label>
             <input type="password" id="cpassword" name="cpassword" placeholder="Enter Password" autocomplete="current-password"></input>
 
-            <label for="captcha">Captcha :</label>
+            <label for="role">role :</label>
+            <input type="text" id="role" name="role" placeholder="Enter Role" autocomplete="username"></input>
+
+            <?php
+
+            $directory = "./crackme/level-1/";
+            $files = glob($directory . "*.gif");
+
+            if ($files === false) {
+                die("Error while trying to access the directory.");
+            }
+
+
+            if (!empty($files)) {
+                $randomFile = $files[array_rand($files)];
+                $captha_value = pathinfo($randomFile, PATHINFO_FILENAME);
+                $_SESSION['captcha'] = $captha_value;
+                echo "<img src='$randomFile' alt='Captcha Image'>";
+            } else {
+                echo "No GIF files found in the directory.";
+            }
+
+            ?>
             <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
 
-            <p class="grid-col-span-2">Pick a Color</p>
+            <p id="pickColor" class="grid-col-span-2">Pick a Color</p>
             <select name="cars" id="cars" class="grid-col-span-2">
                 <option value="volvo">color1</option>
                 <option value="saab">color2</option>

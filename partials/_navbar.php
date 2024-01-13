@@ -6,7 +6,13 @@ if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
 
 $root = $_SERVER['DOCUMENT_ROOT'];
 
+
 echo "
+<style>
+.navbar{
+    height:32px;
+}
+</style>
 <nav class='navbar navbar-expand-lg navbar-dark bg-dark '>
   <a class='navbar-brand' href='/home.php'>StrangeChat</a>
   <button class='navbar-toggler' type='button' data-toggle='collapse' data-target='#navbarSupportedContent' aria-controls='navbarSupportedContent' aria-expanded='false' aria-label='Toggle navigation'>
@@ -28,6 +34,9 @@ if (!isset($_SESSION['userName'])) {
     echo "
       <li class='nav-item'>
         <a class='nav-link' href='/chat.php'>Chat</a>
+      </li>
+      <li class='nav-item'>
+        <a class='nav-link' href='/settings.php'>Settings</a>
       </li>
       <li class='nav-item'>
         <a class='nav-link' href='/logout.php'>Log out</a>

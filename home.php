@@ -27,33 +27,47 @@
         require_once($root . "/partials/_dbconnect.php");
         $username = $_POST["username"];
         $password = $_POST["password"];
-        $user_exist_sql = "select password from users where username='$username'";
-        $pass_hash = mysqli_query($conn, $user_exist_sql);
-        if (mysqli_num_rows($pass_hash) == 0) {
+        $entered_captcha  = $_POST['captcha'];
+        $captcha = $_SESSION['captcha'];
+
+        if ($entered_captcha != $captcha) {
             echo '<div class="alert alert-danger" role="alert">
-                User Does Not exists
+                Captcha Wrong!
                 </div>';
         } else {
-            $pass_hash = $pass_hash->fetch_assoc()['password'];
-            if (password_verify($password, $pass_hash)) {
-                echo '<div class="alert alert-success" role="alert">
+
+            $user_exist_sql = "select password from users where username='$username'";
+            $pass_hash = mysqli_query($conn, $user_exist_sql);
+            if (mysqli_num_rows($pass_hash) == 0) {
+                echo '<div class="alert alert-danger" role="alert">
+                User Does Not exists
+                </div>';
+            } else {
+                $pass_hash = $pass_hash->fetch_assoc()['password'];
+                if (password_verify($password, $pass_hash)) {
+                    echo '<div class="alert alert-success" role="alert">
                     User Registered
                     </div>';
-                $_SESSION['userName'] = $username;
-                $_SESSION['loggedIn'] = true;
 
-                $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = '$username'";
-                $result = mysqli_query($conn, $user_check_sql);
+                    $sql = "SELECT role FROM users WHERE username = '$username'";
+                    $role = mysqli_query($conn, $sql)->fetch_assoc()['role'];
+                    $_SESSION['userName'] = $username;
+                    $_SESSION['role'] = $role;
+                    $_SESSION['loggedIn'] = true;
 
-                if (mysqli_num_rows($result) == 0) {
-                    $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES ('$username')";
-                    mysqli_query($conn, $user_insert_sql);
-                }
-                header("location:/chat.php");
-            } else {
-                echo '<div class="alert alert-danger" role="alert">
+                    $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = '$username'";
+                    $result = mysqli_query($conn, $user_check_sql);
+
+                    if (mysqli_num_rows($result) == 0) {
+                        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES ('$username')";
+                        mysqli_query($conn, $user_insert_sql);
+                    }
+                    header("location:/chat.php");
+                } else {
+                    echo '<div class="alert alert-danger" role="alert">
                         Wrong Password
                         </div>';
+                }
             }
         }
     }
@@ -70,10 +84,29 @@
             <label for="password">Password :</label>
             <input type="password" id="password" name="password" placeholder="Enter Password" autocomplete="current-password"></input>
 
-            <label for="captcha">Captcha :</label>
+            <?php
+
+            $directory = "./crackme/level-1/";
+            $files = glob($directory . "*.gif");
+
+            if ($files === false) {
+                die("Error while trying to access the directory.");
+            }
+
+
+            if (!empty($files)) {
+                $randomFile = $files[array_rand($files)];
+                $captha_value = pathinfo($randomFile, PATHINFO_FILENAME);
+                $_SESSION['captcha'] = $captha_value;
+                echo "<img src='$randomFile' alt='Captcha Image'>";
+            } else {
+                echo "No GIF files found in the directory.";
+            }
+
+            ?>
             <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
 
-            <p class="grid-col-span-2">Pick a Color</p>
+            <p class="grid-col-span-2" id="pickColor">Pick a Color</p>
             <select name="cars" id="cars" class="grid-col-span-2">
                 <option value="volvo">color1</option>
                 <option value="saab">color2</option>

@@ -1,0 +1,21 @@
+body{
+  background-color: #181a1b;
+  color: #FFFFFF;
+}
+
+hr {
+    background-color: #FFFFFF;
+    border:1px solid white;
+}
+
+
+.box{
+    padding: 13px;
+    box-sizing: border-box;
+    display: block;
+    width:90%;
+    height:80%;
+    margin:30px auto;
+    border : 2px solid blue;
+    border-radius: 10px;
+}

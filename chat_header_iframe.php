@@ -7,12 +7,15 @@
 
 
 <style>
+html{
+    height:fit-content;
+}
     body {
         background-color: #181a1b;
         color: white;
         height: fit-content;
-        margin-top: 4px;
-        margin-bottom: 4px;
+        margin-top: 7px;
+        margin-bottom: 7px;
     }
 
     #header_sec1,
@@ -22,15 +25,16 @@
         margin: 0px auto;
     }
 
-    input,button,select{
-        color : black;
+    input,
+    button,
+    select {
+        color: black;
     }
 
     .delbutton {
         color: white;
         background-color: #660000
     }
-
 </style>
 
 <?php
@@ -50,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'sendto':
             $msg_to = $_POST['sendto'];
             $message = mysqli_real_escape_string($conn, $_POST['message']);
-            $sql = "INSERT INTO messages (sender, reciever, text, dt) VALUES ('$username', '$msg_to', '$message', current_timestamp())";
+            $sql = "INSERT INTO messages (sender, reciever, text, dt) VALUES ('$username', '$msg_to', '$message', utc_timestamp())";
             $result = mysqli_query($conn, $sql);
             break;
 
@@ -79,9 +83,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" name="action" value="sendto">Send to</button>
             <select name="sendto" size="1">
                 <option value="everyone">-All chatters-</option>
-                <option value="members">-Members only-</option>
+                <option value="member">-Members only-</option>
                 <option value="staff">-Staff only-</option>
                 <option value="admin">-Admin only-</option>
+                <?php
+
+                $root = $_SERVER['DOCUMENT_ROOT'];
+                require_once($root . "/partials/_dbconnect.php");
+                $sql = "SELECT username FROM users";
+                $result = mysqli_query($conn, $sql);
+
+                if (mysqli_num_rows($result) > 0) {
+                    while ($row = mysqli_fetch_assoc($result)) {
+                        $username = $row['username'];
+                        echo "<option value='$username'>$username</option>";
+                    }
+                }
+
+                ?>
             </select>
             <label><input type="checkbox" name="kick" value="kick">Kick</label>
             <label><input type="checkbox" name="what" value="purge" checked>Also purge messages</label>
