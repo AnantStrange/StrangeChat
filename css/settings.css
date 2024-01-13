@@ -8,6 +8,10 @@ hr {
     border:1px solid white;
 }
 
+select,input{
+    color:black;
+}
+
 
 .box{
     padding: 13px;
@@ -19,3 +23,5 @@ hr {
     border : 2px solid blue;
     border-radius: 10px;
 }
+
+

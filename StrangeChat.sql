@@ -21,7 +21,7 @@ CREATE TABLE if not exists `messages` (
     `id` int(8) AUTO_INCREMENT primary key,
     `sender` varchar(25) NOT NULL,
     `reciever` varchar(10) NOT NULL DEFAULT "guest",
-    `visibility_level` VARCHAR(10) NOT NULL DEFAULT 'everyone',
+    `visibility_level` int NOT NULL DEFAULT 3,
     `text` text NOT NULL,
     `dt` datetime NOT NULL DEFAULT utc_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

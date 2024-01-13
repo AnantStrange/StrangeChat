@@ -1,0 +1,30 @@
+html {
+  height: fit-content;
+}
+body {
+  background-color: #181a1b;
+  color: white;
+  height: fit-content;
+  margin-top: 7px;
+  margin-bottom: 7px;
+}
+
+#header_sec1,
+#header_sec2 {
+  display: block;
+  width: fit-content;
+  margin: 0px auto;
+}
+
+input,
+button,
+select {
+  color: black;
+    border-radius:8px;
+    /* border:2px solid cyan; */
+}
+
+.delbutton {
+  color: white;
+  background-color: #660000;
+}

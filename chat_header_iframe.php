@@ -2,40 +2,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
+    <link rel="stylesheet" href="/css/header.css" class="css">
     <title>Home Page</title>
 </head>
 
-
-<style>
-html{
-    height:fit-content;
-}
-    body {
-        background-color: #181a1b;
-        color: white;
-        height: fit-content;
-        margin-top: 7px;
-        margin-bottom: 7px;
-    }
-
-    #header_sec1,
-    #header_sec2 {
-        display: block;
-        width: fit-content;
-        margin: 0px auto;
-    }
-
-    input,
-    button,
-    select {
-        color: black;
-    }
-
-    .delbutton {
-        color: white;
-        background-color: #660000
-    }
-</style>
 
 <?php
 if (session_status() === PHP_SESSION_NONE) {
@@ -44,6 +14,19 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root = $_SERVER['DOCUMENT_ROOT'];
 $username = $_SESSION['userName'];
+$userRole = $_SESSION['role'];
+
+$visibilityLevels = [
+    'admin'  => 0,
+    'staff'  => 1,
+    'mod'    => 2,
+    'everyone' => 3,
+];
+
+$defaultVisibility = 3;
+$visibilityThreshold = isset($visibilityLevels[$userRole]) ? $visibilityLevels[$userRole] : $defaultVisibility;
+
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ob_end_flush();
@@ -52,9 +35,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     switch ($action) {
         case 'sendto':
-            $msg_to = $_POST['sendto'];
-            $message = mysqli_real_escape_string($conn, $_POST['message']);
-            $sql = "INSERT INTO messages (sender, reciever, text, dt) VALUES ('$username', '$msg_to', '$message', utc_timestamp())";
+            $sendTo = $_POST['sendto'];
+            $message = $_POST['message'];
+            if (array_key_exists($sendTo, $visibilityLevels)) {
+                $visibilityLevel = $visibilityLevels[$sendTo];
+            } else {
+                $visibilityLevel = -1;
+            }
+
+            $sql = "INSERT INTO messages (sender, reciever,visibility_level,text, dt) VALUES ('$username', '$sendTo','$visibilityLevel','$message', utc_timestamp())";
             $result = mysqli_query($conn, $sql);
             break;
 
@@ -83,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" name="action" value="sendto">Send to</button>
             <select name="sendto" size="1">
                 <option value="everyone">-All chatters-</option>
-                <option value="member">-Members only-</option>
+                <option value="mod">-Mods only-</option>
                 <option value="staff">-Staff only-</option>
                 <option value="admin">-Admin only-</option>
                 <?php
