@@ -73,6 +73,10 @@ select,button{
     text-align:center;
 }
 
+.margin-auto{
+    margin : 0px auto;
+}
+
 
 
 

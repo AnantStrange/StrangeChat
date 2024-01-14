@@ -1,5 +1,4 @@
 <head>
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/settings.css" class="css">
 

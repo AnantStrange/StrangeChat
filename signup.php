@@ -5,7 +5,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <link rel="stylesheet" href="/css/bootstrap.min.css">
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/home.css" class="css">
     <title>Home Page</title>
@@ -103,13 +102,13 @@
             <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
 
             <p id="pickColor" class="grid-col-span-2">Pick a Color</p>
-            <select name="cars" id="cars" class="grid-col-span-2">
+            <select name="cars" id="cars" class="grid-col-span-2 margin-auto">
                 <option value="volvo">color1</option>
                 <option value="saab">color2</option>
                 <option value="mercedes">color3</option>
                 <option value="audi">color4</option>
             </select>
-            <button type="submit" class="grid-col-span-2">Enter Chat</button>
+            <button type="submit" class="grid-col-span-2 margin-auto">Enter Chat</button>
 
         </div>
     </form>

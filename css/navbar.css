@@ -1,0 +1,26 @@
+nav {
+  background-color: #333;
+  overflow: hidden;
+}
+
+nav ul {
+  list-style-type: none;
+  /* text-align: center; */
+}
+
+nav li {
+  display: inline-block;
+  margin: 10px 20px;
+}
+
+nav a {
+  text-decoration: none;
+  color: white;
+  display: inline-block;
+}
+
+nav a.active {
+    font-weight: bold;
+}
+
+
