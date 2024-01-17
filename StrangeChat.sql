@@ -5,33 +5,52 @@ create database if not exists StrangeChat;
 use StrangeChat;
 
 CREATE TABLE if not exists `users` (
-  `username` varchar(25) PRIMARY KEY,
+  `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `username` varchar(25) UNIQUE,
   `password` varchar(256) NOT NULL,
-  `role` varchar(10) not null DEFAULT "guest",
-  `dt` datetime NOT NULL DEFAULT utc_timestamp()
+  `userRole` varchar(10) not null DEFAULT "guest",
+  `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE if not exists `users_logged_in` (
-  `username` varchar(25) PRIMARY KEY,
-  `dt` datetime NOT NULL DEFAULT utc_timestamp(),
+  `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `username` varchar(25) UNIQUE,
+  `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `last_activity` TIMESTAMP NOT NULL,
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE if not exists `messages` (
-    `id` int(8) AUTO_INCREMENT primary key,
-    `sender` varchar(25) NOT NULL,
-    `reciever` varchar(10) NOT NULL DEFAULT "guest",
-    `visibility_level` int NOT NULL DEFAULT 3,
-    `text` text NOT NULL,
-    `dt` datetime NOT NULL DEFAULT utc_timestamp()
+  `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `sender` varchar(25) NOT NULL,
+  `receiver` varchar(10) NOT NULL DEFAULT "guest",
+  `visibility_level` TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  `pm` varchar(25) NOT NULL DEFAULT '-1',
+  `tag` varchar(25) NOT NULL DEFAULT '-1',
+  `text` text NOT NULL,
+  `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (`sender`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (`receiver`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX (`sender`),
+  INDEX (`receiver`),
+  INDEX (`pm`),
+  INDEX (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE if not exists `user_settings` (
-  `username` varchar(25) primary key,
-  `settings` text NOT NULL,
+  `id` int(8) AUTO_INCREMENT PRIMARY KEY,
+  `username` varchar(25) UNIQUE,
+  `setting` json NOT NULL
+  CHECK (JSON_VALID(setting))
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE if not exists "notes" (
+  "id" int(8) AUTO_INCREMENT primary key,
+  "username" varchar(25) UNIQUE,
+  "note" text NOT NULL,
+  FOREIGN KEY ("username") REFERENCES "users" ("username") ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 COMMIT;

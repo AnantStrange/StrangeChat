@@ -7,10 +7,8 @@
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/home.css" class="css">
     <title>Home Page</title>
-</head>
-
-<body>
     <?php
+
     session_start();
     if (isset($_SESSION['userName'])) {
         header("location:/chat.php");
@@ -19,12 +17,31 @@
 
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/partials/_navbar.php");
+    $visibilityLevels = [
+        'admin'  => 0,
+        'staff'  => 1,
+        'mod'    => 2,
+        'member' => 3,
+        'guest' => 3,
+    ];
 
+    $availableColors = ["random" => "random"];
+    for ($i = 0; $i < 20; $i++) {
+        $hexColor = "#" . dechex(mt_rand(0, 0xFFFFFF));
+        $availableColors[$hexColor] = $hexColor;
+    }
+
+    ?>
+</head>
+
+<body>
+    <?php
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         require_once($root . "/partials/_dbconnect.php");
-        $username = $_POST["username"];
+        $userName = $_POST["userName"];
         $password = $_POST["password"];
+        $userColor = $_POST["userColor"];
         $entered_captcha  = $_POST['captcha'];
         $captcha = $_SESSION['captcha'];
 
@@ -34,7 +51,7 @@
                 </div>';
         } else {
 
-            $user_exist_sql = "select password from users where username='$username'";
+            $user_exist_sql = "select password from users where username='$userName'";
             $pass_hash = mysqli_query($conn, $user_exist_sql);
             if (mysqli_num_rows($pass_hash) == 0) {
                 echo '<div class="alert alert-danger" role="alert">
@@ -44,22 +61,31 @@
                 $pass_hash = $pass_hash->fetch_assoc()['password'];
                 if (password_verify($password, $pass_hash)) {
                     echo '<div class="alert alert-success" role="alert">
-                    User Registered
+                    User Logged In
                     </div>';
 
-                    $sql = "SELECT role FROM users WHERE username = '$username'";
-                    $role = mysqli_query($conn, $sql)->fetch_assoc()['role'];
-                    $_SESSION['userName'] = $username;
-                    $_SESSION['role'] = $role;
+                    $sql = "SELECT UserRole FROM users WHERE username = '$userName'";
+                    $userRole = mysqli_query($conn, $sql)->fetch_assoc()['UserRole'];
+                    $_SESSION['userName'] = $userName;
+                    $_SESSION['userRole'] = $userRole;
+                    $_SESSION['visibilityLevel'] = $visibilityLevels[$userRole];
                     $_SESSION['loggedIn'] = true;
 
-                    $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = '$username'";
+                    $newSettings = json_encode(['userColor' => $newUserColor]);
+                    $sqlUpdateSettings = "UPDATE user_setting SET settings = '$newSettings' WHERE username = '$userName'";
+                    mysqli_query($conn, $sqlUpdateSettings);
+
+
+                    $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = '$userName'";
                     $result = mysqli_query($conn, $user_check_sql);
 
                     if (mysqli_num_rows($result) == 0) {
-                        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES ('$username')";
+                        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES ('$userName')";
                         mysqli_query($conn, $user_insert_sql);
                     }
+
+                    $sql = "insert into settings (color) values ('$userColor')";
+
                     header("location:/chat.php");
                 } else {
                     echo '<div class="alert alert-danger" role="alert">
@@ -76,8 +102,8 @@
     </header>
     <form action="./home.php" method="post">
         <div class="box">
-            <label for="username">Nickname :</label>
-            <input type="text" id="username" name="username" placeholder="Enter UserName" autocomplete="username"></input>
+            <label for="userName">Nickname :</label>
+            <input type="text" id="userName" name="userName" placeholder="Enter UserName" autocomplete="username"></input>
 
             <label for="password">Password :</label>
             <input type="password" id="password" name="password" placeholder="Enter Password" autocomplete="current-password"></input>
@@ -105,12 +131,12 @@
             <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
 
             <p class="grid-col-span-2" id="pickColor">Pick a Color</p>
-            <select name="cars" id="cars" class="grid-col-span-2 margin-auto">
-                <option value="volvo">color1</option>
-                <option value="saab">color2</option>
-                <option value="mercedes">color3</option>
-                <option value="audi">color4</option>
+            <select name="userColor" id="userColor" class="grid-col-span-2 margin-auto">
+                <?php foreach ($availableColors as $value => $label) : ?>
+                    <option value="<?= $value ?>"><?= $label ?></option>
+                <?php endforeach; ?>
             </select>
+
             <button type="submit" class="grid-col-span-2 margin-auto">Enter Chat</button>
 
         </div>

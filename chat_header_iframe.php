@@ -14,7 +14,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root = $_SERVER['DOCUMENT_ROOT'];
 $username = $_SESSION['userName'];
-$userRole = $_SESSION['role'];
+$userRole = $_SESSION['userRole'];
 
 $visibilityLevels = [
     'admin'  => 0,
@@ -37,14 +37,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'sendto':
             $sendTo = $_POST['sendto'];
             $message = $_POST['message'];
+
+            $commands = [];
+            preg_match_all('/[\/!](\w+)/', $message, $commands);
+
+            // Check for @username tags
+            $usernames = [];
+            preg_match_all('/@(\w+)/', $message, $usernames);
+
+            // Output results
+            /* echo "Commands: "; */
+            /* print_r($commands[1]); */
+
+            /* echo "Usernames: "; */
+            /* print_r($usernames[1]); */
+
+
+
             if (array_key_exists($sendTo, $visibilityLevels)) {
                 $visibilityLevel = $visibilityLevels[$sendTo];
             } else {
                 $visibilityLevel = -1;
             }
 
-            $sql = "INSERT INTO messages (sender, reciever,visibility_level,text, dt) VALUES ('$username', '$sendTo','$visibilityLevel','$message', utc_timestamp())";
-            $result = mysqli_query($conn, $sql);
+            $stmt = $conn->prepare("INSERT INTO messages (sender, receiver, visibility_level, text, dt) VALUES (?, ?, ?, ?, UTC_TIMESTAMP())");
+            $stmt->bind_param("ssss", $username, $sendTo, $visibilityLevel, $message);
+            $stmt->execute();
+            $stmt->close();
             break;
 
         case "delete_last_message":
