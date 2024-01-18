@@ -12,13 +12,26 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-$sqlFile = $root.'/StrangeChat.sql';
+$sqlFile = $root . '/StrangeChat.sql';
 $sqlContent = file_get_contents($sqlFile);
 
-if ($conn->multi_query($sqlContent)) {
-    echo "Setup completed successfully!";
-} else {
-    echo "Error during setup: " . $conn->error;
+// Explode the SQL content into individual statements
+$sqlStatements = explode(';', $sqlContent);
+
+foreach ($sqlStatements as $sql) {
+    // Trim each statement to remove leading/trailing spaces
+    $sql = trim($sql);
+
+    // Skip empty statements
+    if ($sql === '') {
+        continue;
+    }
+
+    // Execute each SQL statement using a prepared statement
+    if ($conn->query($sql) === FALSE) {
+        echo "Error during setup: " . $conn->error;
+        break;
+    }
 }
 
-?>
+echo "Setup completed successfully!";

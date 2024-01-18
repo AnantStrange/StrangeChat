@@ -21,15 +21,6 @@
     $userName = $_SESSION['userName'];
     $userRole = $_SESSION['userRole'];
 
-    /* $visibilityLevels = [ */
-    /*     'admin'  => 0, */
-    /*     'staff'  => 1, */
-    /*     'mod'    => 2, */
-    /*     'member' => 3, */
-    /*     'guest' => 3, */
-    /* ]; */
-    /* $visibilityLevel = isset($visibilityLevels[$userRole]) ? $visibilityLevels[$userRole] : 3; */
-
     ?>
 </head>
 
@@ -37,30 +28,47 @@
 
 function getStyle($conn, $userName)
 {
-    // Perform a SQL query to fetch the userColor for the given username
-    $sql = "SELECT settings FROM user_settings WHERE username = '$userName'";
-    $result = mysqli_query($conn, $sql);
+    $setting = '';
+    $stmt = $conn->prepare("SELECT setting FROM user_settings WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $stmt->bind_result($setting);
 
-    // Check if the query was successful
-    if ($result) {
-        // Fetch the row as an associative array
-        $row = mysqli_fetch_assoc($result);
+    // Fetch the setting (assuming it's a JSON string)
+    if ($stmt->fetch()) {
+        $userSettings = json_decode($setting, true);
 
-        // Check if the row exists and contains the 'settings' column
-        if ($row && isset($row['settings'])) {
-            // Decode the JSON-like settings data
-            $settings = json_decode($row['settings'], true);
+        // Initialize style string
+        $style = "style=\"";
 
-            // Check if 'userColor' exists in the settings
-            if (isset($settings['userColor'])) {
-                // Return the style attribute with the color
-                return "style='color: " . $settings['userColor'] . "'";
-            }
+        // Check and add userColor to style
+        if (isset($userSettings['userColor'])) {
+            $userColor = $userSettings['userColor'];
+            $style .= "color: $userColor; ";
         }
-    }
 
-    // Default return value if something goes wrong
-    return null;
+        // Check and add fontColor to style
+        if (isset($userSettings['fontColor'])) {
+            $fontColor = $userSettings['fontColor'];
+            $style .= "font-color: $fontColor; ";
+        }
+
+        // Check and add Italics to style
+        if (isset($userSettings['italics']) && $userSettings['italics'] == true) {
+            $style .= "font-style: italic; ";
+        }
+
+        // Check and add bold to style
+        if (isset($userSettings['bold']) && $userSettings['bold'] == true) {
+            $style .= "font-weight: bold; ";
+        }
+
+        // Close the style attribute
+        $style .= "\"";
+
+        return $style;
+    }
+    return;
 }
 
 
@@ -106,8 +114,12 @@ function getMessages($conn)
     $userName = $_SESSION['userName'];
     $visibilityLevel = $_SESSION['visibilityLevel'];
 
-    $sql = "SELECT * FROM messages WHERE receiver = '$userName' OR visibility_level >= '$visibilityLevel' ORDER BY dt DESC";
-    $messages = mysqli_query($conn, $sql);
+    $sql = "SELECT * FROM messages WHERE receiver = ? OR visibility_level >= ? ORDER BY dt DESC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("si", $userName, $visibilityLevel);
+    $stmt->execute();
+    $messages = $stmt->get_result();
+    $stmt->close();
 
     while ($msgRow = mysqli_fetch_assoc($messages)) {
 

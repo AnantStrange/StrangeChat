@@ -31,8 +31,130 @@
         $availableColors[$hexColor] = $hexColor;
     }
 
+    class UserNotExistException extends Exception
+    {
+    }
+    class InvalidPasswordException extends Exception
+    {
+    }
+    class InvalidCaptchaException extends Exception
+    {
+    }
     ?>
 </head>
+
+<?php
+
+function showErrorAlert($message)
+{
+    echo '<div class="alert alert-danger" role="alert">' . $message . '</div>';
+}
+
+function showSuccessAlert($message)
+{
+    echo '<div class="alert alert-success" role="alert">' . $message . '</div>';
+}
+
+function validateCaptcha($enteredCaptcha, $expectedCaptcha)
+{
+    if ($enteredCaptcha != $expectedCaptcha) {
+        throw new InvalidCaptchaException('Captcha Wrong!');
+    }
+    return true;
+}
+
+function getHash($conn, $userName)
+{
+    $userExistSql = "SELECT password FROM users WHERE username=?";
+    $stmt = mysqli_prepare($conn, $userExistSql);
+    mysqli_stmt_bind_param($stmt, "s", $userName);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+
+    if (mysqli_stmt_num_rows($stmt) == 0) {
+        // User does not exist
+        mysqli_stmt_close($stmt);
+        throw new UserNotExistException();
+    }
+
+    mysqli_stmt_bind_result($stmt, $passHash);
+    mysqli_stmt_fetch($stmt);
+    mysqli_stmt_close($stmt);
+
+    return $passHash;
+}
+
+function validatePassword($password, $passHash)
+{
+    if (!password_verify($password, $passHash)) {
+        throw new InvalidPasswordException('Wrong Password');
+    }
+    return true;
+}
+
+
+
+function addUserLogIn($conn, $userName)
+{
+
+    $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = ?";
+    $stmt = mysqli_prepare($conn, $user_check_sql);
+    mysqli_stmt_bind_param($stmt, "s", $userName);
+    mysqli_stmt_execute($stmt);
+    mysqli_stmt_store_result($stmt);
+
+    if (mysqli_stmt_num_rows($stmt) == 0) {
+        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES (?)";
+        $stmt_insert = mysqli_prepare($conn, $user_insert_sql);
+        mysqli_stmt_bind_param($stmt_insert, "s", $userName);
+        mysqli_stmt_execute($stmt_insert);
+        mysqli_stmt_close($stmt_insert);
+    }
+
+    mysqli_stmt_close($stmt);
+}
+
+function setSession($conn, $userName)
+{
+    $visibilityLevels = [
+        'admin'  => 0,
+        'staff'  => 1,
+        'mod'    => 2,
+        'member' => 3,
+        'guest' => 3,
+    ];
+    $stmt = $conn->prepare("SELECT UserRole FROM users WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $userRole = $result->fetch_assoc()['userrole'];
+
+    $stmt->close();
+    $_SESSION['userName'] = $userName;
+    $_SESSION['userRole'] = $userRole;
+    $_SESSION['visibilityLevel'] = $visibilityLevels[$userRole];
+}
+
+function setColor($conn, $userName, $userColor, $availableColors)
+{
+
+    if ($userColor === 'random') {
+        $userColor = $availableColors[array_rand($availableColors)];
+    }
+    $newColor = json_encode(['userColor' => $userColor]);
+    $sqlUpdateColor = "UPDATE user_settings SET setting = ? WHERE username = ?";
+
+    // Assuming $conn is your database connection object
+    $stmt = $conn->prepare($sqlUpdateColor);
+    $stmt->bind_param("ss", $newColor, $userName);
+    $stmt->execute();
+    $stmt->close();
+}
+
+
+?>
+
+
 
 <body>
     <?php
@@ -45,54 +167,31 @@
         $entered_captcha  = $_POST['captcha'];
         $captcha = $_SESSION['captcha'];
 
-        if ($entered_captcha != $captcha) {
-            echo '<div class="alert alert-danger" role="alert">
-                Captcha Wrong!
-                </div>';
-        } else {
 
-            $user_exist_sql = "select password from users where username='$userName'";
-            $pass_hash = mysqli_query($conn, $user_exist_sql);
-            if (mysqli_num_rows($pass_hash) == 0) {
-                echo '<div class="alert alert-danger" role="alert">
-                User Does Not exists <a href="/signup.php">Sign in?</a>
-                </div>';
-            } else {
-                $pass_hash = $pass_hash->fetch_assoc()['password'];
-                if (password_verify($password, $pass_hash)) {
-                    echo '<div class="alert alert-success" role="alert">
-                    User Logged In
-                    </div>';
+        try {
+            validateCaptcha($entered_captcha, $captcha);
+            $pass_hash = getHash($conn, $userName);
+            validatePassword($password, $pass_hash);
 
-                    $sql = "SELECT UserRole FROM users WHERE username = '$userName'";
-                    $userRole = mysqli_query($conn, $sql)->fetch_assoc()['UserRole'];
-                    $_SESSION['userName'] = $userName;
-                    $_SESSION['userRole'] = $userRole;
-                    $_SESSION['visibilityLevel'] = $visibilityLevels[$userRole];
-                    $_SESSION['loggedIn'] = true;
+            setSession($conn, $userName);
+            setColor($conn, $userName, $userColor, $availableColors);
+            addUserLogIn($conn, $userName);
 
-                    $newSettings = json_encode(['userColor' => $newUserColor]);
-                    $sqlUpdateSettings = "UPDATE user_setting SET settings = '$newSettings' WHERE username = '$userName'";
-                    mysqli_query($conn, $sqlUpdateSettings);
-
-
-                    $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = '$userName'";
-                    $result = mysqli_query($conn, $user_check_sql);
-
-                    if (mysqli_num_rows($result) == 0) {
-                        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES ('$userName')";
-                        mysqli_query($conn, $user_insert_sql);
-                    }
-
-                    $sql = "insert into settings (color) values ('$userColor')";
-
-                    header("location:/chat.php");
-                } else {
-                    echo '<div class="alert alert-danger" role="alert">
-                        Wrong Password
-                        </div>';
-                }
-            }
+            header("location:/chat.php");
+            /* } catch (CaptchaValidationException $e) { */
+            /*     echo "Captcha validation failed"; */
+            /* } catch (UserNotFoundException $e) { */
+            /*     echo "User does not exist. Validation stopped."; */
+            /* } catch (InvalidPasswordException $e) { */
+            /*     echo "Password validation failed"; */
+        } catch (Exception $e) {
+            echo "An unexpected error occurred. Response for other errors.";
+            // Print or log details of the caught exception
+            echo "\nException Details:\n";
+            echo "Message: " . $e->getMessage() . "\n";
+            echo "Code: " . $e->getCode() . "\n";
+            echo "File: " . $e->getFile() . "\n";
+            echo "Line: " . $e->getLine() . "\n";
         }
     }
 

@@ -18,7 +18,7 @@ $currentPage = basename($currentUrl, '.php'); // Get the filename without the ex
 <body>
     <nav>
         <ul>
-            <li><a href=""> <h3>StrangeChat</h3> </a></li>
+            <li><a href="/home.php"> <h3>StrangeChat</h3> </a></li>
             <?php
 
             echo '<li><a href="/home.php" class="' . ($currentPage == 'home' ? 'active' : '') . '">Home</a></li>';

@@ -67,13 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
 
         case "delete_last_message":
-            $sql = "DELETE FROM messages WHERE sender = '$username' ORDER BY dt DESC LIMIT 1";
-            mysqli_query($conn, $sql);
+            $sql = "DELETE FROM messages WHERE sender = ? ORDER BY dt DESC LIMIT 1";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $stmt->close();
             break;
 
         case "delete_all_messages":
-            $sql = "DELETE FROM messages WHERE sender = '$username' ";
-            mysqli_query($conn, $sql);
+            $sql = "DELETE FROM messages WHERE sender = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("s", $username);
+            $stmt->execute();
+            $stmt->close();
             break;
 
         default:
@@ -98,8 +104,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $root = $_SERVER['DOCUMENT_ROOT'];
                 require_once($root . "/partials/_dbconnect.php");
+
                 $sql = "SELECT username FROM users";
-                $result = mysqli_query($conn, $sql);
+                $stmt = $conn->prepare($sql);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $stmt->close();
 
                 if (mysqli_num_rows($result) > 0) {
                     while ($row = mysqli_fetch_assoc($result)) {

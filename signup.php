@@ -8,21 +8,121 @@
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/home.css" class="css">
     <title>Home Page</title>
-</head>
-
-<body>
     <?php
+
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
+    }
+    if (isset($_SESSION['userName'])) {
+        header("location:/chat.php");
+        die();
     }
 
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/partials/_navbar.php");
+    $visibilityLevels = [
+        'admin'  => 0,
+        'staff'  => 1,
+        'mod'    => 2,
+        'member' => 3,
+        'guest' => 3,
+    ];
+
+    $availableColors = ["random" => "random"];
+    for ($i = 0; $i < 20; $i++) {
+        $hexColor = "#" . dechex(mt_rand(0, 0xFFFFFF));
+        $availableColors[$hexColor] = $hexColor;
+    }
+
+    class InvalidUsernameException extends Exception
+    {
+    }
+    class InvalidCaptchaException extends Exception
+    {
+    }
+    class PasswordMismatchException extends Exception
+    {
+    }
+    class UserAlreadyExistsException extends Exception
+    {
+    }
+
+
+    ?>
+</head>
+
+<?php
+
+function setColor($conn, $userName, $userColor, $availableColors)
+{
+
+    if ($userColor === 'random') {
+        $userColor = $availableColors[array_rand($availableColors)];
+    }
+    $newColor = json_encode(['userColor' => $userColor]);
+    $sqlUpdateColor = "UPDATE user_settings SET setting = ? WHERE username = ?";
+
+    $stmt = $conn->prepare($sqlUpdateColor);
+    $stmt->bind_param("ss", $newColor, $userName);
+    $stmt->execute();
+    $stmt->close();
+}
+
+function validateUserName($username)
+{
+    if (!preg_match('/^[a-zA-Z0-9]+$/', $username)) {
+        throw new InvalidUsernameException("Username should not contain any special characters or spaces!");
+    }
+}
+
+function validateCaptcha($enteredCaptcha, $captcha)
+{
+    if ($enteredCaptcha != $captcha) {
+        throw new InvalidCaptchaException("Captcha wrong!");
+    }
+}
+
+function validatePassword($password, $cpassword)
+{
+    if ($password != $cpassword) {
+        throw new PasswordMismatchException("Passwords do not match!");
+    }
+}
+
+function validateUser($conn, $username)
+{
+    $user_exist_query = "SELECT username FROM users WHERE username=?";
+    $stmt = $conn->prepare($user_exist_query);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->store_result();
+
+    if ($stmt->num_rows > 0) {
+        throw new UserAlreadyExistsException("User already exists!");
+    }
+
+    $stmt->close();
+}
+
+function addUser($conn, $userName, $password, $userRole)
+{
+    $pass_hash = password_hash($password, PASSWORD_BCRYPT, [21]);
+    $sql = "INSERT INTO users (username, password, userRole, dt) VALUES (?, ?, ?, current_timestamp())";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sss", $userName, $pass_hash, $userRole);
+    $stmt->execute();
+    $stmt->close();
+}
+?>
+
+<body>
+    <?php
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         require_once($root . "/partials/_dbconnect.php");
-        $username = $_POST["username"];
+        $userName = $_POST["username"];
         $password = $_POST["password"];
         $cpassword = $_POST["cpassword"];
         $userRole = $_POST["userRole"];
@@ -30,51 +130,24 @@
         $entered_captcha  = $_POST['captcha'];
         $captcha = $_SESSION['captcha'];
 
-        if ($userColor == "random") {
-            $availableColors = ["#FF5733", "#33FF57", "#5733FF", "#FF33E6"];
-            $userColor = $availableColors[array_rand($availableColors)];
-        }
+        try {
+            validateUser($conn, $userName);
+            validateUserName($userName);
+            validateCaptcha($entered_captcha, $captcha);
+            validatePassword($password, $cpassword);
 
+            addUser($conn, $userName, $password, $userRole);
+            setColor($conn, $userName, $userColor, $availableColors);
 
-        if ($entered_captcha != $captcha) {
-            echo '<div class="alert alert-danger" role="alert">
-                Captcha Wrong!
-                </div>';
-        } else {
-
-            if ($password != $cpassword) {
-                echo '<div class="alert alert-danger" role="alert">
-            Passwords do not match !
-            </div>';
-            } else {
-                $user_exist = "select username from users where username='$username'";
-                $result = mysqli_query($conn, $user_exist);
-                if (mysqli_num_rows($result) > 0) {
-                    echo '<div class="alert alert-danger" role="alert">
-                User Already exists
-                </div>';
-                } else {
-                    $pass_hash = password_hash($password, PASSWORD_BCRYPT, [21]);
-                    $sql = "insert into users (username,password,userRole,dt) values('$username','$pass_hash','$userRole',current_timestamp())";
-                    $sql_result = mysqli_query($conn, $sql);
-
-                    $settings = json_encode(['userColor' => $userColor]);
-                    $sql_settings = "INSERT INTO user_settings (username, settings) VALUES ('$username', '$settings')";
-                    mysqli_query($conn, $sql_settings);
-
-                    if ($sql_result) {
-                        echo '<div class="alert alert-success" role="alert">
-                    User Registered. You can now login
-                    </div>';
-                        echo '<meta http-equiv="refresh" content="3;url=/home.php">';
-                        header("location:/home.php");
-                    } else {
-                        echo '<div class="alert alert-danger" role="alert">
-                        Error: Unable to register user. Please try again. ' . mysqli_error($conn) . '
-                      </div>';
-                    }
-                }
-            }
+            header("location:/home.php");
+        } catch (Exception $e) {
+            echo "An unexpected error occurred. Response for other errors.";
+            // Print or log details of the caught exception
+            echo "\nException Details:\n";
+            echo "Message: " . $e->getMessage() . "\n";
+            echo "Code: " . $e->getCode() . "\n";
+            echo "File: " . $e->getFile() . "\n";
+            echo "Line: " . $e->getLine() . "\n";
         }
     }
 
@@ -127,12 +200,11 @@
             <p id="pickColor" class="grid-col-span-2">Pick a Color</p>
 
             <select name="userColor" id="userColor" class="grid-col-span-2 margin-auto">
-                <option value="random">Random Color</option>
-                <option value="#FF5733">Coral</option>
-                <option value="#33FF57">Lime Green</option>
-                <option value="#5733FF">Royal Blue</option>
-                <option value="#FF33E6">Pink</option>
-            </select> 
+                <?php foreach ($availableColors as $value => $label) : ?>
+                    <option value="<?= $value ?>"><?= $label ?></option>
+                <?php endforeach; ?>
+            </select>
+
 
             <button type="submit" class="grid-col-span-2 margin-auto">Register</button>
 

@@ -17,12 +17,14 @@
 
 <?php
 
-function refreshRate($conn) {
+function refreshRate()
+{
     echo "<label for='refreshRate'>RefreshRate(s) :</label>";
     echo '<input type="number" name="refresh" size="3" min="5" max="150" value="10">';
 }
 
-function fontColor($conn) {
+function fontColor()
+{
     echo "<label for='username'>Font :</label>";
     echo '<input type="text" name="fontColor" placeholder="Font Color"></input>';
 };
@@ -33,7 +35,10 @@ function roleSelect($conn)
     echo "<select name='username' size='1'>";
 
     $sql = "SELECT username FROM users";
-    $result = mysqli_query($conn, $sql);
+    $stmt = $conn->prepare($sql);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $stmt->close();
 
     if (mysqli_num_rows($result) > 0) {
         while ($row = mysqli_fetch_assoc($result)) {

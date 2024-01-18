@@ -7,9 +7,13 @@ $root = $_SERVER['DOCUMENT_ROOT'];
 require_once($root . "/partials/_navbar.php");
 require_once($root . "/partials/_dbconnect.php");
 
-$username = mysqli_real_escape_string($conn, $_SESSION['userName']);
-$sql = "DELETE FROM users_logged_in WHERE users_logged_in.username = '$username'";
-$result = mysqli_query($conn, $sql);
+$username = $_SESSION['userName'];
+$sql = "DELETE FROM users_logged_in WHERE users_logged_in.username = ?";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$stmt->close();
 
 $_SESSION = array();
 session_destroy();
