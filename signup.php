@@ -34,17 +34,13 @@
         $availableColors[$hexColor] = $hexColor;
     }
 
-    class InvalidUsernameException extends Exception
-    {
+    class InvalidUsernameException extends Exception {
     }
-    class InvalidCaptchaException extends Exception
-    {
+    class InvalidCaptchaException extends Exception {
     }
-    class PasswordMismatchException extends Exception
-    {
+    class PasswordMismatchException extends Exception {
     }
-    class UserAlreadyExistsException extends Exception
-    {
+    class UserAlreadyExistsException extends Exception {
     }
 
 
@@ -53,44 +49,38 @@
 
 <?php
 
-function setColor($conn, $userName, $userColor, $availableColors)
-{
+function setColor($conn, $userName, $userColor, $availableColors) {
 
     if ($userColor === 'random') {
         $userColor = $availableColors[array_rand($availableColors)];
     }
-    $newColor = json_encode(['userColor' => $userColor]);
-    $sqlUpdateColor = "UPDATE user_settings SET setting = ? WHERE username = ?";
-
+    $userColor = json_encode(['userColor' => $userColor]);
+    $sqlUpdateColor = "UPDATE user_settings SET setting = JSON_SET(setting, '$.userColor', ?) WHERE username = ?";
     $stmt = $conn->prepare($sqlUpdateColor);
-    $stmt->bind_param("ss", $newColor, $userName);
+    $stmt->bind_param("ss", $userColor, $userName);
     $stmt->execute();
     $stmt->close();
 }
 
-function validateUserName($username)
-{
+function validateUserName($username) {
     if (!preg_match('/^[a-zA-Z0-9]+$/', $username)) {
         throw new InvalidUsernameException("Username should not contain any special characters or spaces!");
     }
 }
 
-function validateCaptcha($enteredCaptcha, $captcha)
-{
+function validateCaptcha($enteredCaptcha, $captcha) {
     if ($enteredCaptcha != $captcha) {
         throw new InvalidCaptchaException("Captcha wrong!");
     }
 }
 
-function validatePassword($password, $cpassword)
-{
+function validatePassword($password, $cpassword) {
     if ($password != $cpassword) {
         throw new PasswordMismatchException("Passwords do not match!");
     }
 }
 
-function validateUser($conn, $username)
-{
+function validateUser($conn, $username) {
     $user_exist_query = "SELECT username FROM users WHERE username=?";
     $stmt = $conn->prepare($user_exist_query);
     $stmt->bind_param("s", $username);
@@ -104,8 +94,7 @@ function validateUser($conn, $username)
     $stmt->close();
 }
 
-function addUser($conn, $userName, $password, $userRole)
-{
+function addUser($conn, $userName, $password, $userRole) {
     $pass_hash = password_hash($password, PASSWORD_BCRYPT, [21]);
     $sql = "INSERT INTO users (username, password, userRole, dt) VALUES (?, ?, ?, current_timestamp())";
 

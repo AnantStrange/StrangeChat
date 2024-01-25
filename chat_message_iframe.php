@@ -26,8 +26,7 @@
 
 <?php
 
-function getStyle($conn, $userName)
-{
+function getStyle($conn, $userName) {
     $setting = '';
     $stmt = $conn->prepare("SELECT setting FROM user_settings WHERE username = ?");
     $stmt->bind_param("s", $userName);
@@ -72,8 +71,7 @@ function getStyle($conn, $userName)
 }
 
 
-function getChannelIndicator($msgRow)
-{
+function getChannelIndicator($msgRow) {
 
     $messageId = $msgRow['id'];
     $userName = $_SESSION['userName'];
@@ -108,8 +106,7 @@ function getChannelIndicator($msgRow)
     return $channelIndicator;
 }
 
-function getMessages($conn)
-{
+function getMessages($conn) {
 
     $userName = $_SESSION['userName'];
     $visibilityLevel = $_SESSION['visibilityLevel'];

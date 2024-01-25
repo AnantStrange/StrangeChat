@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="/css/home.css" class="css">
     <title>Home Page</title>
     <?php
-
     session_start();
     if (isset($_SESSION['userName'])) {
         header("location:/chat.php");
@@ -31,40 +30,33 @@
         $availableColors[$hexColor] = $hexColor;
     }
 
-    class UserNotExistException extends Exception
-    {
+    class UserNotExistException extends Exception {
     }
-    class InvalidPasswordException extends Exception
-    {
+    class InvalidPasswordException extends Exception {
     }
-    class InvalidCaptchaException extends Exception
-    {
+    class InvalidCaptchaException extends Exception {
     }
     ?>
 </head>
 
 <?php
 
-function showErrorAlert($message)
-{
+function showErrorAlert($message) {
     echo '<div class="alert alert-danger" role="alert">' . $message . '</div>';
 }
 
-function showSuccessAlert($message)
-{
+function showSuccessAlert($message) {
     echo '<div class="alert alert-success" role="alert">' . $message . '</div>';
 }
 
-function validateCaptcha($enteredCaptcha, $expectedCaptcha)
-{
+function validateCaptcha($enteredCaptcha, $expectedCaptcha) {
     if ($enteredCaptcha != $expectedCaptcha) {
         throw new InvalidCaptchaException('Captcha Wrong!');
     }
     return true;
 }
 
-function getHash($conn, $userName)
-{
+function getHash($conn, $userName) {
     $userExistSql = "SELECT password FROM users WHERE username=?";
     $stmt = mysqli_prepare($conn, $userExistSql);
     mysqli_stmt_bind_param($stmt, "s", $userName);
@@ -84,8 +76,7 @@ function getHash($conn, $userName)
     return $passHash;
 }
 
-function validatePassword($password, $passHash)
-{
+function validatePassword($password, $passHash) {
     if (!password_verify($password, $passHash)) {
         throw new InvalidPasswordException('Wrong Password');
     }
@@ -94,8 +85,7 @@ function validatePassword($password, $passHash)
 
 
 
-function addUserLogIn($conn, $userName)
-{
+function addUserLogIn($conn, $userName) {
 
     $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = ?";
     $stmt = mysqli_prepare($conn, $user_check_sql);
@@ -114,8 +104,7 @@ function addUserLogIn($conn, $userName)
     mysqli_stmt_close($stmt);
 }
 
-function setSession($conn, $userName)
-{
+function setSession($conn, $userName) {
     $visibilityLevels = [
         'admin'  => 0,
         'staff'  => 1,
@@ -123,11 +112,13 @@ function setSession($conn, $userName)
         'member' => 3,
         'guest' => 3,
     ];
-    $stmt = $conn->prepare("SELECT UserRole FROM users WHERE username = ?");
+
+    $stmt = $conn->prepare("SELECT userrole FROM users WHERE username = ?");
     $stmt->bind_param("s", $userName);
     $stmt->execute();
     $result = $stmt->get_result();
     $userRole = $result->fetch_assoc()['userrole'];
+
 
     $stmt->close();
     $_SESSION['userName'] = $userName;
@@ -135,18 +126,15 @@ function setSession($conn, $userName)
     $_SESSION['visibilityLevel'] = $visibilityLevels[$userRole];
 }
 
-function setColor($conn, $userName, $userColor, $availableColors)
-{
+function setColor($conn, $userName, $userColor, $availableColors) {
 
     if ($userColor === 'random') {
         $userColor = $availableColors[array_rand($availableColors)];
     }
-    $newColor = json_encode(['userColor' => $userColor]);
-    $sqlUpdateColor = "UPDATE user_settings SET setting = ? WHERE username = ?";
-
-    // Assuming $conn is your database connection object
+    $userColor = json_encode(['userColor' => $userColor]);
+    $sqlUpdateColor = "UPDATE user_settings SET setting = JSON_SET(setting, '$.userColor', ?) WHERE username = ?";
     $stmt = $conn->prepare($sqlUpdateColor);
-    $stmt->bind_param("ss", $newColor, $userName);
+    $stmt->bind_param("ss", $userColor, $userName);
     $stmt->execute();
     $stmt->close();
 }
@@ -178,15 +166,14 @@ function setColor($conn, $userName, $userColor, $availableColors)
             addUserLogIn($conn, $userName);
 
             header("location:/chat.php");
-            /* } catch (CaptchaValidationException $e) { */
-            /*     echo "Captcha validation failed"; */
-            /* } catch (UserNotFoundException $e) { */
-            /*     echo "User does not exist. Validation stopped."; */
-            /* } catch (InvalidPasswordException $e) { */
-            /*     echo "Password validation failed"; */
+        } catch (InvalidCaptchaException $e) {
+            echo "Captcha validation failed";
+        } catch (UserNotExistException $e) {
+            echo "User does not exist. Validation stopped.";
+        } catch (InvalidPasswordException $e) {
+            echo "Password validation failed";
         } catch (Exception $e) {
             echo "An unexpected error occurred. Response for other errors.";
-            // Print or log details of the caught exception
             echo "\nException Details:\n";
             echo "Message: " . $e->getMessage() . "\n";
             echo "Code: " . $e->getCode() . "\n";
