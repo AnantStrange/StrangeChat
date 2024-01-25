@@ -107,7 +107,6 @@ function getChannelIndicator($msgRow) {
 }
 
 function getMessages($conn) {
-
     $userName = $_SESSION['userName'];
     $visibilityLevel = $_SESSION['visibilityLevel'];
 
@@ -119,20 +118,73 @@ function getMessages($conn) {
     $stmt->close();
 
     while ($msgRow = mysqli_fetch_assoc($messages)) {
-
         $channelIndicator = getChannelIndicator($msgRow);
-        $style = getStyle($conn, $msgRow['sender']);
+        $senderStyle = getStyle($conn, $msgRow['sender']);  // Style for the sender
         $dt = (new DateTime($msgRow['dt']))->format('m-d H:i:s');
 
         echo "<p class='user_messages'>";
         echo "<small class='msg-dt'>" . $dt . " || </small>";
-        echo "<span class='msg-sender' $style> $channelIndicator </span>";
-        echo " => ";
-        echo "<span class='msg-text' $style>" . $msgRow['text'] . "</span>";
+        echo "<span class='msg-sender' $senderStyle> $channelIndicator </span>";
+
+        // Check if the message is tagged
+        if ($msgRow['tag'] == 1) {
+            // Get the tagged username from message_tags
+            $taggedUserName = getTaggedUserName($conn, $msgRow['id']);
+            // If the tagged username is found, get the color from user_settings
+            if ($taggedUserName) {
+                $taggedUserColor = getUserColor($conn, $taggedUserName);
+
+                // Split the message into parts: before, tagged username, and after
+                $parts = explode('@' . $taggedUserName, $msgRow['text'], 2);
+                $beforeTagged = $parts[0];  // Text before the tagged username
+                $afterTagged = isset($parts[1]) ? $parts[1] : '';  // Text after the tagged username
+
+                echo " => ";
+                echo "<span class='msg-text' $senderStyle>$beforeTagged</span>"; // Text before the tagged username with sender's color
+                echo "<span class='tagged-username' style='color: $taggedUserColor;'>@$taggedUserName</span>"; // Tagged username with tagged user's color
+                echo "<span class='msg-text' $senderStyle>$afterTagged</span>"; // Text after the tagged username with sender's color
+            }
+        } else {
+            echo " => ";
+            echo "<span class='msg-text' $senderStyle>" . $msgRow['text'] . "</span>"; // Regular text with sender's color
+        }
+
         echo "</p>";
 
         echo "<hr>";
     }
+}
+
+// Function to get the tagged username from message_tags
+function getTaggedUserName($conn, $msgId) {
+    $stmt = $conn->prepare("SELECT username FROM message_tags mt
+                           JOIN users u ON mt.user_id = u.id
+                           WHERE mt.msg_id = ?");
+    $stmt->bind_param("i", $msgId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $taggedUserName = $result->fetch_assoc()['username'];
+    $stmt->close();
+
+    return $taggedUserName;
+}
+
+// Function to get the color from user_settings
+function getUserColor($conn, $userName) {
+    $stmt = $conn->prepare("SELECT JSON_UNQUOTE(JSON_EXTRACT(setting, '$.userColor')) AS userColor FROM user_settings WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    // Check if the row exists before accessing the result
+    if ($row = $result->fetch_assoc()) {
+        $userColor = $row['userColor'];
+    } else {
+        // Handle the case where the user row doesn't exist or 'userColor' is not present
+        $userColor = 'default_color'; // Set a default color or handle as needed
+    }
+
+    $stmt->close();
+    return $userColor;
 }
 
 ?>

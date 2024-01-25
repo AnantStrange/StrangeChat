@@ -50,14 +50,18 @@
 <?php
 
 function setColor($conn, $userName, $userColor, $availableColors) {
-
     if ($userColor === 'random') {
         $userColor = $availableColors[array_rand($availableColors)];
     }
-    $userColor = json_encode(['userColor' => $userColor]);
-    $sqlUpdateColor = "UPDATE user_settings SET setting = JSON_SET(setting, '$.userColor', ?) WHERE username = ?";
+
+    $sqlUpdateColor = "
+        INSERT INTO user_settings (username, setting)
+        VALUES (?, JSON_SET('{}', '$.userColor', ?))
+        ON DUPLICATE KEY UPDATE setting = JSON_SET(setting, '$.userColor', ?)
+    ";
+
     $stmt = $conn->prepare($sqlUpdateColor);
-    $stmt->bind_param("ss", $userColor, $userName);
+    $stmt->bind_param("sss", $userName, $userColor, $userColor);
     $stmt->execute();
     $stmt->close();
 }

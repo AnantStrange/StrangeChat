@@ -36,6 +36,8 @@
     }
     class InvalidCaptchaException extends Exception {
     }
+    class UserNotAllowedException extends Exception {
+    }
     ?>
 </head>
 
@@ -72,7 +74,6 @@ function getHash($conn, $userName) {
     mysqli_stmt_bind_result($stmt, $passHash);
     mysqli_stmt_fetch($stmt);
     mysqli_stmt_close($stmt);
-
     return $passHash;
 }
 
@@ -93,15 +94,17 @@ function addUserLogIn($conn, $userName) {
     mysqli_stmt_execute($stmt);
     mysqli_stmt_store_result($stmt);
 
+    $sessionId = session_id();
     if (mysqli_stmt_num_rows($stmt) == 0) {
-        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`) VALUES (?)";
+        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`, `session_id`) VALUES (?,?)";
         $stmt_insert = mysqli_prepare($conn, $user_insert_sql);
-        mysqli_stmt_bind_param($stmt_insert, "s", $userName);
+        mysqli_stmt_bind_param($stmt_insert, "ss", $userName,$sessionId);
         mysqli_stmt_execute($stmt_insert);
         mysqli_stmt_close($stmt_insert);
     }
 
     mysqli_stmt_close($stmt);
+
 }
 
 function setSession($conn, $userName) {
@@ -127,21 +130,35 @@ function setSession($conn, $userName) {
 }
 
 function setColor($conn, $userName, $userColor, $availableColors) {
-
     if ($userColor === 'random') {
         $userColor = $availableColors[array_rand($availableColors)];
     }
-    $userColor = json_encode(['userColor' => $userColor]);
-    $sqlUpdateColor = "UPDATE user_settings SET setting = JSON_SET(setting, '$.userColor', ?) WHERE username = ?";
+
+    $sqlUpdateColor = "
+        INSERT INTO user_settings (username, setting)
+        VALUES (?, JSON_SET('{}', '$.userColor', ?))
+        ON DUPLICATE KEY UPDATE setting = JSON_SET(setting, '$.userColor', ?)
+    ";
+
     $stmt = $conn->prepare($sqlUpdateColor);
-    $stmt->bind_param("ss", $userColor, $userName);
+    $stmt->bind_param("sss", $userName, $userColor, $userColor);
     $stmt->execute();
     $stmt->close();
 }
 
+function validateUser($conn, $userName) {
+    $stmt = $conn->prepare("select status from users where username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $result = $result->fetch_assoc()['status'];
+    if ($result == "kicked") {
+        throw new  UserNotAllowedException("User is Kicked");
+    }
+    return true;
+}
 
 ?>
-
 
 
 <body>
@@ -160,6 +177,7 @@ function setColor($conn, $userName, $userColor, $availableColors) {
             validateCaptcha($entered_captcha, $captcha);
             $pass_hash = getHash($conn, $userName);
             validatePassword($password, $pass_hash);
+            validateUser($conn, $userName);
 
             setSession($conn, $userName);
             setColor($conn, $userName, $userColor, $availableColors);
@@ -172,6 +190,8 @@ function setColor($conn, $userName, $userColor, $availableColors) {
             echo "User does not exist. Validation stopped.";
         } catch (InvalidPasswordException $e) {
             echo "Password validation failed";
+        } catch (UserNotAllowedException $e) {
+            echo "User is Kicked";
         } catch (Exception $e) {
             echo "An unexpected error occurred. Response for other errors.";
             echo "\nException Details:\n";

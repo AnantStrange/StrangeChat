@@ -8,7 +8,8 @@ CREATE TABLE if not exists `users` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(25) UNIQUE,
   `password` varchar(256) NOT NULL,
-  `userrole` varchar(10) not null DEFAULT "guest",
+  `userrole` varchar(10) NOT NULL DEFAULT "guest",
+  `status` varchar(10) NOT NULL DEFAULT "active",
   `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -16,9 +17,11 @@ CREATE TABLE if not exists `users` (
 CREATE TABLE if not exists `users_logged_in` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(25) UNIQUE,
+  `session_id` varchar(40) NOT NULL UNIQUE,
   `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   last_activity TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX (`username`),
+  INDEX (`session_id`),
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -37,12 +40,20 @@ CREATE TABLE if not exists `messages` (
   INDEX (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE message_tags (
+CREATE TABLE if not exists message_pms (
     msg_id SMALLINT UNSIGNED,
     user_id SMALLINT UNSIGNED,
     PRIMARY KEY (msg_id, user_id),
-    FOREIGN KEY (msg_id) REFERENCES messages(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (msg_id) REFERENCES messages(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE if not exists message_tags (
+    msg_id SMALLINT UNSIGNED,
+    user_id SMALLINT UNSIGNED,
+    PRIMARY KEY (msg_id, user_id),
+    FOREIGN KEY (msg_id) REFERENCES messages(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS `user_settings` (

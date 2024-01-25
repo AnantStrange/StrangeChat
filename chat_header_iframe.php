@@ -18,7 +18,8 @@
         'admin'  => 0,
         'staff'  => 1,
         'mod'    => 2,
-        'everyone' => 3,
+        'member'    => 3,
+        'everyone' => 4,
     ];
 
     $defaultVisibility = 3;
@@ -43,37 +44,209 @@ function getUserIdByUsername($conn, $userName) {
     }
 }
 
+function handleKick($conn) {
+    $userRole = $_SESSION['userRole'];
+    $userName = $_SESSION['userRole'];
+    global $visibilityLevels;
+    if (in_array($userRole, ["guest", "member"])) {
+        return;
+    }
+
+    $toKick = $_POST['sendto'];
+    $stmt = $conn->prepare("select userrole from users where username = ?");
+    $stmt->bind_param("s", $toKick);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $toKickUserRole = $result->fetch_assoc()['userrole'];
+    if ($stmt->errno) {
+        echo "Error executing statement: " . $stmt->error;
+    } else {
+        /* echo "Insert successful"; */
+    }
+    $stmt->close();
+
+
+    $userLevel = $visibilityLevels[$userRole];
+    $toKickUserLevel = $visibilityLevels[$toKickUserRole];
+
+    if ($userLevel >= $toKickUserLevel) {
+        return;
+    }
+
+    $kickStmt = $conn->prepare("UPDATE users SET status = 'kicked' WHERE username = ?");
+    $kickStmt->bind_param("s", $toKick);
+    $kickStmt->execute();
+    if ($kickStmt->errno) {
+        echo "Error executing statement: " . $stmt->error;
+    } else {
+        /* echo "user kicked bool set in users table"; */
+    }
+    $kickStmt->close();
+    echo "user to kick :" . $toKick . "\n";
+
+    $stmt = $conn->prepare("SELECT session_id FROM users_logged_in WHERE username = ?");
+    $stmt->bind_param("s", $toKick);
+    $stmt->execute();
+
+    if ($stmt->errno) {
+        echo "Error executing statement: " . $stmt->error;
+    } else {
+        /* echo "purged messages"; */
+    }
+
+    $result = $stmt->get_result();
+    $sessionId = $result->fetch_assoc()['session_id'];
+    $stmt->close();
+
+    // save current admin session (optional).
+    $admin_session = session_id();
+    // get target id.
+    $session_id_to_destroy = $sessionId; 
+    // close the current session.
+    session_write_close();
+    // load the specified target session 
+    session_id($session_id_to_destroy);
+    // start the target session.
+    session_start();
+    // clean all session data in target session.
+    $_SESSION = [];
+    session_destroy();
+    // save and close that session.
+    session_write_close();
+
+    // Optional if you need to resume admin session:
+
+    // reload admin session id
+    session_id($admin_session);
+    // restart admin session. . ..
+    session_start();
+
+    $stmt = $conn->prepare("delete from users_logged_in where username=?");
+    $stmt->bind_param("ss",$toKick);
+    $stmt->execute();
+    $stmt->close();
+
+
+
+    // ... 
+
+    // header should go to a specific file. 
+    /* exit; */
+
+
+
+    /* // Start the session using the session ID of the user to be kicked */
+    /* session_id($sessionId); */
+    /* session_start(); */
+
+    /* echo "mysessionId after starting: " . session_id() . "\n"; */
+
+    /* // Destroy the session for the kicked user */
+    /* $stmt = $conn->prepare("SELECT session_id FROM users_logged_in WHERE username = ?"); */
+    /* $stmt->bind_param("s", $toKick); */
+    /* $stmt->execute(); */
+
+    /* if ($stmt->errno) { */
+    /*     echo "Error executing statement: " . $stmt->error; */
+    /* } else { */
+    /*     /* echo "purged messages"; */
+    /* } */
+
+    /* $result = $stmt->get_result(); */
+    /* $sessionId = $result->fetch_assoc()['session_id']; */
+    /* $stmt->close(); */
+
+    /* echo "mysessionId before: " . session_id() . "\n"; */
+    /* echo "session_id to destroy: " . $sessionId . "\n"; */
+
+    /* // Regenerate session ID for the current user */
+    /* session_regenerate_id(true); */
+    /* $newSessionId = session_id(); */
+
+    /* // Update the user's session ID in the database */
+    /* $stmt = $conn->prepare("UPDATE users_logged_in SET session_id = ? WHERE username = ?"); */
+    /* $stmt->bind_param("ss", $newSessionId, $toKick); */
+    /* $stmt->execute(); */
+    /* $stmt->close(); */
+
+    /* // Start a new session and destroy the old one */
+    /* session_start(); */
+    /* session_destroy(); */
+
+    /* echo "mysessionId after: " . session_id() . "\n"; */
+
+    /* // Redirect or do other actions */
+    /* /* header("Location: /home.php"); */
+    /* exit(); */
+
+    if ($_POST['purge'] = "purge") {
+        $stmt = $conn->prepare("delete from messages where sender=?");
+        $stmt->bind_param("s", $toKick);
+        $stmt->execute();
+        if ($stmt->errno) {
+            echo "Error executing statement: " . $stmt->error;
+        } else {
+            echo "purged messages";
+        }
+        $stmt->close();
+    }
+}
+
+function insertTags($conn, $msgId, $tags) {
+    foreach ($tags[1] as $taggedUser) {
+        $taggedUserId = getUserIdByUsername($conn, $taggedUser);
+        if ($taggedUserId !== false) {
+            $stmt = $conn->prepare("INSERT INTO message_tags (msg_id, user_id) VALUES (?, ?)");
+            $stmt->bind_param("ii", $msgId, $taggedUserId);
+            $stmt->execute();
+
+            if ($stmt->errno) {
+                echo "Error executing statement: " . $stmt->error;
+            } else {
+                /* echo "Insert successful"; */
+            }
+            $stmt->close();
+        }
+    }
+}
+
+function insertPms($conn, $msgId, $pmedUser) {
+
+    $pmedUserId = getUserIdByUsername($conn, $pmedUser);
+    $stmt = $conn->prepare("INSERT INTO message_pms (msg_id, user_id) VALUES (?, ?)");
+    $stmt->bind_param("ii", $msgId, $pmedUserId);
+    $stmt->execute();
+
+    if ($stmt->errno) {
+        echo "Error executing statement: " . $stmt->error;
+    } else {
+        /* echo "Insert successful"; */
+    }
+    $stmt->close();
+}
+
 function handleMsg($conn) {
     global $visibilityLevels;
     global $userName;
 
     $sendTo = $_POST['sendto'];
     $message = $_POST['message'];
-echo "message : ". $message;
     $allowedValues = array("everyone", "mod", "member", "staff", "admin");
-
     $isPm = 0;
     $isTag = 0;
     $tags = [];
 
+    // Check for pms 
     if (!in_array($sendTo, $allowedValues)) {
         $isPm = 1;
     }
-
-    /* $commands = []; */
-    /* preg_match_all('/[\/!](\w+)/', $message, $commands); */
 
     // Check for @username tags
     if (preg_match_all('/@(\w+)/', $message, $tags)) {
         $isTag = 1;
     }
 
-    /* echo "Commands: "; */
-    /* print_r($commands[1]); */
-
-    echo "\nTags : ";
-    print_r($tags[1]);
-
+    // -1 visibilityLevel denotes a pm, 
     if (array_key_exists($sendTo, $visibilityLevels)) {
         $visibilityLevel = $visibilityLevels[$sendTo];
     } else {
@@ -81,24 +254,24 @@ echo "message : ". $message;
     }
 
     $stmt = $conn->prepare("INSERT INTO messages (sender, receiver, visibility_level, pm, tag, text) VALUES (?, ?, ?, ?, ?, ?)");
-
     $stmt->bind_param("sssiis", $userName, $sendTo, $visibilityLevel, $isPm, $isTag, $message);
-    
     $stmt->execute();
+    if ($stmt->errno) {
+        echo "Error executing statement: " . $stmt->error;
+    } else {
+        /* echo "Insert successful"; */
+    }
     $stmt->close();
 
     $msgId = $conn->insert_id;
-
     // Insert tags into the message_tags table
-    foreach ($tags[1] as $taggedUser) {
-        $taggedUserId = getUserIdByUsername($conn, $taggedUser);
+    if ($isTag) {
+        insertTags($conn, $msgId, $tags);
+    }
 
-        if ($taggedUserId !== false) {
-            $stmt = $conn->prepare("INSERT INTO message_tags (message_id, user_id) VALUES (?, ?)");
-            $stmt->bind_param("ii", $msgId, $taggedUserId);
-            $stmt->execute();
-            $stmt->close();
-        }
+    // Insert PM into the message_pms table
+    else if ($isPm) {
+        insertPms($conn, $msgId, $sendTo);
     }
 }
 
@@ -114,7 +287,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     switch ($action) {
         case 'sendto':
-            handleMsg($conn);
+            if (isset($_POST['kick']) && $_POST["kick"] == "kick") {
+                handleKick($conn);
+            } else {
+                handleMsg($conn);
+            }
             break;
 
         case "delete_last_message":
@@ -122,6 +299,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("s", $userName);
             $stmt->execute();
+            if ($stmt->errno) {
+                echo "Error executing statement: " . $stmt->error;
+            } else {
+                /* echo "Insert successful"; */
+            }
+
             $stmt->close();
             break;
 
@@ -130,6 +313,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("s", $userName);
             $stmt->execute();
+            if ($stmt->errno) {
+                echo "Error executing statement: " . $stmt->error;
+            } else {
+                /* echo "Insert successful"; */
+            }
             $stmt->close();
             break;
 
@@ -154,8 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <option value="admin">-Admin only-</option>
                 <?php
 
-
-                $sql = "SELECT username FROM users";
+                $sql = "SELECT username FROM users_logged_in";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
                 $result = $stmt->get_result();
