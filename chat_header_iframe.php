@@ -28,6 +28,36 @@
 </head>
 <?php
 
+function back_to_home($session) {
+    /* mysqli_close($db); */
+
+    // save current admin session (optional).
+    $admin_session = session_id();
+    // get target id.
+    $session_id_to_destroy = $session;
+    // close the current session.
+    session_write_close();
+    // load the specified target session 
+    session_id($session_id_to_destroy);
+    // start the target session.
+    session_start();
+    // clean all session data in target session.
+    $_SESSION = [];
+    // save and close that session.
+    session_write_close();
+
+    // Optional if you need to resume admin session:
+
+    // reload admin session id
+    session_id($admin_session);
+    // restart admin session. . ..
+    session_start();
+
+    // header should go to a specific file. 
+    /* header('Location: ../index.php'); */
+    exit;
+}
+
 function getUserIdByUsername($conn, $userName) {
     $userId = "";
     $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
@@ -46,7 +76,7 @@ function getUserIdByUsername($conn, $userName) {
 
 function handleKick($conn) {
     $userRole = $_SESSION['userRole'];
-    $userName = $_SESSION['userRole'];
+    /* $userName = $_SESSION['userRole']; */
     global $visibilityLevels;
     if (in_array($userRole, ["guest", "member"])) {
         return;
@@ -82,7 +112,7 @@ function handleKick($conn) {
         /* echo "user kicked bool set in users table"; */
     }
     $kickStmt->close();
-    echo "user to kick :" . $toKick . "\n";
+    /* echo "user to kick :" . $toKick . "\n"; */
 
     $stmt = $conn->prepare("SELECT session_id FROM users_logged_in WHERE username = ?");
     $stmt->bind_param("s", $toKick);
@@ -98,86 +128,7 @@ function handleKick($conn) {
     $sessionId = $result->fetch_assoc()['session_id'];
     $stmt->close();
 
-    // save current admin session (optional).
-    $admin_session = session_id();
-    // get target id.
-    $session_id_to_destroy = $sessionId; 
-    // close the current session.
-    session_write_close();
-    // load the specified target session 
-    session_id($session_id_to_destroy);
-    // start the target session.
-    session_start();
-    // clean all session data in target session.
-    $_SESSION = [];
-    session_destroy();
-    // save and close that session.
-    session_write_close();
-
-    // Optional if you need to resume admin session:
-
-    // reload admin session id
-    session_id($admin_session);
-    // restart admin session. . ..
-    session_start();
-
-    $stmt = $conn->prepare("delete from users_logged_in where username=?");
-    $stmt->bind_param("ss",$toKick);
-    $stmt->execute();
-    $stmt->close();
-
-
-
-    // ... 
-
-    // header should go to a specific file. 
-    /* exit; */
-
-
-
-    /* // Start the session using the session ID of the user to be kicked */
-    /* session_id($sessionId); */
-    /* session_start(); */
-
-    /* echo "mysessionId after starting: " . session_id() . "\n"; */
-
-    /* // Destroy the session for the kicked user */
-    /* $stmt = $conn->prepare("SELECT session_id FROM users_logged_in WHERE username = ?"); */
-    /* $stmt->bind_param("s", $toKick); */
-    /* $stmt->execute(); */
-
-    /* if ($stmt->errno) { */
-    /*     echo "Error executing statement: " . $stmt->error; */
-    /* } else { */
-    /*     /* echo "purged messages"; */
-    /* } */
-
-    /* $result = $stmt->get_result(); */
-    /* $sessionId = $result->fetch_assoc()['session_id']; */
-    /* $stmt->close(); */
-
-    /* echo "mysessionId before: " . session_id() . "\n"; */
-    /* echo "session_id to destroy: " . $sessionId . "\n"; */
-
-    /* // Regenerate session ID for the current user */
-    /* session_regenerate_id(true); */
-    /* $newSessionId = session_id(); */
-
-    /* // Update the user's session ID in the database */
-    /* $stmt = $conn->prepare("UPDATE users_logged_in SET session_id = ? WHERE username = ?"); */
-    /* $stmt->bind_param("ss", $newSessionId, $toKick); */
-    /* $stmt->execute(); */
-    /* $stmt->close(); */
-
-    /* // Start a new session and destroy the old one */
-    /* session_start(); */
-    /* session_destroy(); */
-
-    /* echo "mysessionId after: " . session_id() . "\n"; */
-
-    /* // Redirect or do other actions */
-    /* /* header("Location: /home.php"); */
-    /* exit(); */
+    back_to_home($sessionId);
 
     if ($_POST['purge'] = "purge") {
         $stmt = $conn->prepare("delete from messages where sender=?");

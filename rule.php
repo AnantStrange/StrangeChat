@@ -1,4 +1,3 @@
-
 Topic : Any thing related to Tech is allowed.
 Off-topic chats are allowed but keep it minimal in spirit of the Topic
 

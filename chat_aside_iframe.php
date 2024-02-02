@@ -5,17 +5,33 @@
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/chat_aside_iframe.css" class="css">
     <title>Home Page</title>
+    <?php
+
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    require_once($root . "/partials/_dbconnect.php");
+    $userRoles = ['admin', 'staff', 'mod', 'member', 'guest'];
+
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $username = $_SESSION['userName'];
+
+    $isKicked = '';
+    $stmt = $conn->prepare("SELECT status FROM users WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $stmt->bind_result($isKicked);
+    if ($isKicked) {
+        die("YOu have been Kicked");
+    }
+    $stmt->close();
+
+    ?>
 </head>
 
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-$root = $_SERVER['DOCUMENT_ROOT'];
-$username = $_SESSION['userName'];
 
-function printUserListByRole($conn, $userRole)
-{
+function printUserListByRole($conn, $userRole) {
     $query = "SELECT u.username FROM users u JOIN users_logged_in uli ON u.username = uli.username WHERE u.userRole = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $userRole);
@@ -38,8 +54,6 @@ function printUserListByRole($conn, $userRole)
 
 <aside>
     <?php
-    require_once($root . "/partials/_dbconnect.php");
-    $userRoles = ['admin', 'staff', 'mod', 'member', 'guest'];
 
     foreach ($userRoles as $userRole) {
         printUserListByRole($conn, $userRole);

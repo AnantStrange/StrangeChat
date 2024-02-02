@@ -21,6 +21,17 @@
     $userName = $_SESSION['userName'];
     $userRole = $_SESSION['userRole'];
 
+    $isKicked = '';
+    $stmt = $conn->prepare("SELECT status FROM users WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $stmt->bind_result($isKicked);
+    if ($isKicked) {
+        die("YOu have been Kicked");
+    }
+    $stmt->close();
+
+
     ?>
 </head>
 
