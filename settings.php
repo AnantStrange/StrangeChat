@@ -18,15 +18,35 @@
 
 <?php
 
-function refreshRate() {
-    echo '<form action="/settings_handle/php" method="post">';
+function getRefreshRate() {
+    global $conn, $userName;
+
+    $stmt = $conn->prepare("SELECT JSON_UNQUOTE(JSON_EXTRACT(setting, '$.refreshRate')) as refreshRate FROM user_settings WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+
+    $result = null;
+    $stmt->bind_result($result);
+
+    if ($stmt->fetch()) {
+        return $result;
+    } else {
+        return 10;
+    }
+    $stmt->close();
+    return $result;
+}
+
+function refreshRateSetting() {
+    $refreshRate = getRefreshRate();
+    echo '<form action="settings.php" method="post">';
     echo "<label for='refreshRate'>RefreshRate(s) :</label>";
-    echo '<input type="number" name="refresh" size="3" min="5" max="150" value="10">';
+    echo '<input type="number" name="refreshRate" size="3" min="5" max="150" value="'.$refreshRate.'">';
     echo '<button type="submit" name="action" value="refreshUpdate">Update</button>';
     echo '</form>';
 }
 
-function fontColor($conn, $userName) {
+function fontColorSetting($conn, $userName) {
     $setting = '';
     $stmt = $conn->prepare("SELECT setting FROM user_settings WHERE
 username=?");
@@ -46,11 +66,12 @@ username=?");
         $availableColors[$hexColor] = $hexColor;
     }
 
-    echo '<form action="/settings_handle.php" method="post">';
-    echo "<label for='username'>Font :</label>";
-    echo '<input type="text" name="fontColor" placeholder="Enter Color Hex"></input>';
+    echo '<form action="settings.php" method="post">';
+    echo "<label for='username'>Font Color :</label>";
+    echo '<input type="color" name="customFontColor" id="userColor" value="' . $userColor . '">';
+
     echo "or";
-    echo '<select name="userColor" id="userColor" class="grid-col-span-2 margin-auto">';
+    echo '<select name="fontColor" id="userColor" class="grid-col-span-2 margin-auto">';
     foreach ($availableColors as $value => $label) :
         echo '<option value="' . $value . '">' . $label . '</option>';
     endforeach;
@@ -59,8 +80,8 @@ username=?");
     echo '</form>';
 };
 
-function roleUpdate($conn) {
-    echo '<form action="/settings_handle.php" method="post">';
+function roleUpdateSetting($conn) {
+    echo '<form action="settings.php" method="post">';
     echo "<label for='username'>Role Update</label>";
     echo "<select name='username' size='1'>";
 
@@ -93,9 +114,9 @@ function roleUpdate($conn) {
 
 function guests_settings($conn) {
     global $userName;
-    refreshRate($conn);
+    refreshRateSetting($conn);
     echo "<hr><br>";
-    fontColor($conn, $userName);
+    fontColorSetting($conn, $userName);
     echo "<hr><br>";
 }
 
@@ -103,7 +124,7 @@ function mods_settings($conn) {
 }
 
 function staff_settings($conn) {
-    roleUpdate($conn);
+    roleUpdateSetting($conn);
     echo "<hr>";
 }
 
@@ -141,3 +162,67 @@ function admin_settings($conn) {
 
 
 </body>
+
+
+<?php
+
+function roleUpdate($userName, $userRole) {
+    global $conn;
+    $stmt = $conn->prepare("set role = ? where username = ?");
+    $stmt->bind_param("ss", $userRole, $userName);
+    $stmt->execute();
+}
+
+function refreshUpdate($refreshRate) {
+    global $conn;
+    $userName = $_SESSION['userName'];
+
+    $stmt = $conn->prepare("UPDATE user_settings SET setting = JSON_SET(setting, '$.refreshRate', ?) WHERE username = ?");
+    $stmt->bind_param("ss", $refreshRate, $userName);
+    $stmt->execute();
+}
+
+function colorUpdate($newFontColor) {
+    global $conn;
+    $userName = $_SESSION['userName'];
+
+    $stmt = $conn->prepare("UPDATE user_settings SET setting = JSON_SET(setting, '$.userColor', ?) WHERE username = ?");
+    $stmt->bind_param("ss", $newFontColor, $userName);
+    $stmt->execute();
+
+    if ($stmt->affected_rows > 0) {
+        return "Font color updated successfully";
+    } else {
+        return "Failed to update font color";
+    }
+}
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    switch ($_POST['action']) {
+
+        case "roleUpdate":
+            $userName = $_POST['userName'];
+            $userRole = $_POST['userRole'];
+            roleUpdate($userName, $userRole);
+            break;
+        case "refreshUpdate":
+            $refreshRate = $_POST['refreshRate'];
+            refreshUpdate($refreshRate);
+            break;
+        case "fontUpdate":
+            if ($_POST['customFontColor'] !== "") {
+                $newFontColor = $_POST['customFontColor'];
+            } else {
+                $newFontColor = $_POST['fontColor'];
+            }
+            echo "Font Color: " . $newFontColor;
+            colorUpdate($newFontColor);
+            break;
+    }
+}
+
+
+
+
+?>

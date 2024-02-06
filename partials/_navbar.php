@@ -18,7 +18,9 @@ $currentPage = basename($currentUrl, '.php'); // Get the filename without the ex
 <body>
     <nav>
         <ul>
-            <li><a href="/home.php"> <h3>StrangeChat</h3> </a></li>
+            <li><a href="/home.php">
+                    <h3>StrangeChat</h3>
+                </a></li>
             <?php
 
             echo '<li><a href="/home.php" class="' . ($currentPage == 'home' ? 'active' : '') . '">Home</a></li>';
@@ -28,9 +30,12 @@ $currentPage = basename($currentUrl, '.php'); // Get the filename without the ex
             } elseif (isset($_SESSION['userName'])) {
                 echo '
                 <li><a href="/chat.php" class="' . ($currentPage == 'chat' ? 'active' : '') . '">Chat</a></li>
-                <li><a href="/settings.php" class="' . ($currentPage == 'settings' ? 'active' : '') . '">Settings</a></li>
-                <li><a href="/logout.php" class="' . ($currentPage == 'logout' ? 'active' : '') . '">Log Out</a></li>
-            ';
+            <li><a href="/settings.php" class="' . ($currentPage == 'settings' ? 'active' : '') . '">Settings</a></li>';
+            }
+
+            echo '<li><a href="/rulez.php" class="' . ($currentPage == 'rulez' ? 'active' : '') . '">Rulez</a></li>';
+            if (isset($_SESSION['userName'])) {
+                echo '<li><a href="/logout.php" class="' . ($currentPage == 'logout' ? 'active' : '') . '">Log Out</a></li>';
             }
 
             ?>

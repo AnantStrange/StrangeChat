@@ -1,3 +1,4 @@
+<!doctype html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -13,6 +14,7 @@
     require_once($root . "/partials/_dbconnect.php");
     $userName = $_SESSION['userName'];
     $userRole = $_SESSION['userRole'];
+    $multiLine = false;
 
     $visibilityLevels = [
         'admin'  => 0,
@@ -272,6 +274,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->close();
             break;
 
+        case "switch_to_single-line":
+            $multiLine = false;
+            break;
+        case "switch_to_multi-line":
+            $multiLine = true;
+            break;
         default:
             break;
     }
@@ -282,8 +290,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <header>
     <form action="chat_header_iframe.php" method="post">
         <div id="header_sec1">
-            <?php echo $_SESSION["userName"] . ":"; ?>
-            <input type="text" name="message" placeholder="Message">
+            <?php
+            echo $_SESSION["userName"] . ":";
+            if (!$multiLine) {
+                echo '<input type="text" name="message" placeholder="Message">';
+            } else {
+                echo '<textarea name="message" placeholder="Message"></textarea>';
+            }
+            ?>
+
             <button type="submit" name="action" value="sendto">Send to</button>
             <select name="sendto" size="1">
                 <option value="everyone">-All chatters-</option>
@@ -314,7 +329,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div id="header_sec2">
             <button type="submit" name="action" value="delete_last_message" class="delbutton">Delete Last Message</button>
             <button type="submit" name="action" value="delete_all_messages" class="delbutton">Delete All Messages</button>
-            <button type="submit" name="action" value="switch_to_multi-line">Switch to Multi-line</button>
+            <?php
+            if (!$multiLine) {
+                echo '<button type="submit" name="action" value="switch_to_multi-line">Switch to Multi-line</button>';
+            } else {
+                echo '<button type="submit" name="action" value="switch_to_single-line">Switch to Single-line</button>';
+            }
+
+            ?>
         </div>
     </form>
 </header>

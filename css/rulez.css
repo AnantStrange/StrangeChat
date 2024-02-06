@@ -1,0 +1,41 @@
+@import "colors.css";
+
+
+.container h3 {
+  font-size: 1.2em;
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+blockquote {
+  /* border: 2px solid pink; */
+  margin-left: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: rgb(22, 27, 34);
+  border-radius: 8px;
+  padding: 5px 5px;
+}
+
+ul {
+  list-style-type: square;
+  margin-left: 20px;
+}
+
+.container {
+  display: block;
+  width: 80vw;
+  height: 80%;
+  border: 2px solid var(--theme-color);
+  margin: 30px auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  border-radius: 10px;
+  padding: 7px 20px;
+  background-color: rgb(13, 17, 23);
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
+

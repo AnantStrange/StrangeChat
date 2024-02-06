@@ -1,7 +1,14 @@
+@import "colors.css";
+
 body {
   padding: 10px;
 }
 
-h3{
-    text-align: center;
+h3 {
+  text-align: center;
+}
+
+hr {
+  border-color: var(--theme-color);
+  /* border-color : purple; */
 }

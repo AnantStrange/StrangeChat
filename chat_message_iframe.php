@@ -4,7 +4,6 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta http-equiv="refresh" content="10">
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/chat_message_iframe.css" class="css">
     <title>chat_iframe</title>
@@ -31,11 +30,32 @@
     }
     $stmt->close();
 
+    $refreshRate = getRefreshRate();
+    echo '<meta http-equiv="refresh" content="' . $refreshRate . '">';
 
     ?>
 </head>
 
 <?php
+
+function getRefreshRate() {
+    global $conn, $userName;
+
+    $stmt = $conn->prepare("SELECT JSON_UNQUOTE(JSON_EXTRACT(setting, '$.refreshRate')) as refreshRate FROM user_settings WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+
+    $result = null;
+    $stmt->bind_result($result);
+
+    if ($stmt->fetch()) {
+        return $result;
+    } else {
+        return 10;
+    }
+    $stmt->close();
+    return $result;
+}
 
 function getStyle($conn, $userName) {
     $setting = '';

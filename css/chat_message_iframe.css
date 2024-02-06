@@ -1,10 +1,11 @@
+@import "colors.css";
+
 body {
   padding: 10px;
-    /* font-size : 16px; */
 }
 
-.user_messages{
-    margin:7px 0px;
+.user_messages {
+  margin: 7px 0px;
 }
 
 .message-info {
@@ -15,6 +16,6 @@ body {
   margin-left: 10px;
 }
 
-
-
-
+hr {
+  border-color: var(--theme-color);
+}

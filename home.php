@@ -98,13 +98,12 @@ function addUserLogIn($conn, $userName) {
     if (mysqli_stmt_num_rows($stmt) == 0) {
         $user_insert_sql = "INSERT INTO `users_logged_in` (`username`, `session_id`) VALUES (?,?)";
         $stmt_insert = mysqli_prepare($conn, $user_insert_sql);
-        mysqli_stmt_bind_param($stmt_insert, "ss", $userName,$sessionId);
+        mysqli_stmt_bind_param($stmt_insert, "ss", $userName, $sessionId);
         mysqli_stmt_execute($stmt_insert);
         mysqli_stmt_close($stmt_insert);
     }
 
     mysqli_stmt_close($stmt);
-
 }
 
 function setSession($conn, $userName) {
@@ -237,12 +236,7 @@ function validateUser($conn, $userName) {
             <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
 
             <p class="grid-col-span-2" id="pickColor">Pick a Color</p>
-            <select name="userColor" id="userColor" class="grid-col-span-2 margin-auto">
-                <?php foreach ($availableColors as $value => $label) : ?>
-                    <option value="<?= $value ?>"><?= $label ?></option>
-                <?php endforeach; ?>
-            </select>
-
+            <input type="color" name="userColor" id="userColor"class="grid-col-span-2 margin-auto">
             <button type="submit" class="grid-col-span-2 margin-auto">Enter Chat</button>
 
         </div>

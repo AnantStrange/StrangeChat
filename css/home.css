@@ -1,82 +1,80 @@
-html, body {
-    height: 100%;
+@import "colors.css";
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-    position: relative;
+  position: relative;
 }
 
 body:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
-    background-image: url('images/skeletons.png');
-    opacity: 0.1;
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  background-image: url('images/skeletons.png');
+  opacity: 0.1;
 }
 
 body > * {
-    position: relative;
-    z-index: 2;
+  position: relative;
+  z-index: 2;
 }
 
-h1{
-    font-size:100px;
-    font-size:4em;
+h1 {
+  font-size: 100px;
+  font-size: 4em;
 }
 
 header {
-    margin: 30px auto 20px;
-    /* border:2px solid blue; */
-    text-align: center;
+  margin: 30px auto 20px;
+  /* border:2px solid blue; */
+  text-align: center;
 }
 
-
 input {
-    background-color: rgb( 59, 59, 59);
-    border-radius: 6px;
+  background-color: rgb(59, 59, 59);
+  border-radius: 6px;
 }
 
 .box {
-    font-size: 20px;
-    padding: 19px 39px;
-    display: grid;
-    gap: 10px;
-    grid-template-columns: 50% 50%;
-    width: 469px;
-    margin: 30px auto;
-    border: 3px solid purple;
-    border-radius: 10px;
+  font-size: 20px;
+  padding: 19px 39px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 50% 50%;
+  width: 469px;
+  margin: 30px auto;
+  border: 3px solid var(--theme-color);
+  border-radius: 10px;
 }
 
-
-.box > :nth-child(12){
-    /* border:2px solid blue; */
-    margin-top:-10px;
+.box > :nth-child(12) {
+  /* border:2px solid blue; */
+  margin-top: -10px;
 }
 
-.grid-col-span-2{
-    grid-column:span 2;
+.grid-col-span-2 {
+  grid-column: span 2;
 }
 
-select,button{
-    background-color: rgb( 59, 59, 59);
-    padding: 0px 6px;
-    width:fit-content;
-    margin:auto; 
+select,
+button {
+  background-color: rgb(59, 59, 59);
+  padding: 0px 6px;
+  width: fit-content;
+  margin: auto;
 }
 
-#pickColor{
-    text-align:center;
+#pickColor {
+  text-align: center;
 }
 
-.margin-auto{
-    margin : 0px auto;
+.margin-auto {
+  margin: 0px auto;
 }
-
-
-
-
