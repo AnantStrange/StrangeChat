@@ -17,8 +17,14 @@
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/partials/_dbconnect.php");
 
-    $userName = $_SESSION['userName'];
-    $userRole = $_SESSION['userRole'];
+    if (isset($_SESSION['userName'])) {
+        $userName = $_SESSION['userName'];
+        $userRole = $_SESSION['userRole'];
+    } else {
+        echo "kicked";
+        die();
+    }
+
 
     $isKicked = '';
     $stmt = $conn->prepare("SELECT status FROM users WHERE username = ?");
@@ -77,12 +83,6 @@ function getStyle($conn, $userName) {
             $style .= "color: $userColor; ";
         }
 
-        // Check and add fontColor to style
-        if (isset($userSettings['fontColor'])) {
-            $fontColor = $userSettings['fontColor'];
-            $style .= "font-color: $fontColor; ";
-        }
-
         // Check and add Italics to style
         if (isset($userSettings['italics']) && $userSettings['italics'] == true) {
             $style .= "font-style: italic; ";
@@ -104,9 +104,11 @@ function getStyle($conn, $userName) {
 
 function getChannelIndicator($msgRow) {
 
+    global $conn;
     $messageId = $msgRow['id'];
     $userName = $_SESSION['userName'];
     $sender = $msgRow['sender'];
+    $receiver = $msgRow['receiver'];
 
     if (!isset($_SESSION['read_messages'])) {
         $_SESSION['read_messages'] = array();
@@ -114,22 +116,16 @@ function getChannelIndicator($msgRow) {
 
     switch ($msgRow['receiver']) {
         case "admin":
-            $channelIndicator = "[A] " . $sender;
+            $channelIndicator = "[A] ";
             break;
         case "staff":
-            $channelIndicator = "[S] " . $sender;
+            $channelIndicator = "[S] ";
             break;
         case "mod":
-            $channelIndicator = "[M] " . $sender;
+            $channelIndicator = "[M] ";
             break;
         case "everyone":
-            $channelIndicator = $sender;
-            break;
-        case $userName:
-            $channelIndicator = "[{$msgRow['sender']} to {$msgRow['receiver']}]";
-            if (!in_array($messageId, $_SESSION['read_messages'])) {
-                $_SESSION['read_messages'][] = $messageId;
-            }
+            $channelIndicator = "";
             break;
         default:
             break;
@@ -137,25 +133,52 @@ function getChannelIndicator($msgRow) {
     return $channelIndicator;
 }
 
+function getPmIndicator($msgRow) {
+
+    global $conn;
+    $sender = $msgRow['sender'];
+    $receiver = $msgRow['receiver'];
+    $senderStyle = getStyle($conn, $sender);
+    $receiverStyle = getStyle($conn, $receiver);
+
+    $senderName = "<span $senderStyle>{$msgRow['sender']}</span>";
+    $receiverName = "<span $receiverStyle>{$msgRow['receiver']}</span>";
+
+    $pmIndicator = "[$senderName to $receiverName]";
+
+    return $pmIndicator;
+}
+
 function getMessages($conn) {
     $userName = $_SESSION['userName'];
     $visibilityLevel = $_SESSION['visibilityLevel'];
 
-    $sql = "SELECT * FROM messages WHERE receiver = ? OR visibility_level >= ? ORDER BY dt DESC";
+    $sql = "SELECT * FROM messages WHERE receiver = ? OR sender = ? OR visibility_level >= ? ORDER BY dt DESC";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("si", $userName, $visibilityLevel);
+    $stmt->bind_param("ssi", $userName, $userName, $visibilityLevel);
     $stmt->execute();
     $messages = $stmt->get_result();
     $stmt->close();
 
     while ($msgRow = mysqli_fetch_assoc($messages)) {
-        $channelIndicator = getChannelIndicator($msgRow);
+
+        if ($msgRow['pm'] == 1) {
+            $channelIndicator = getPmIndicator($msgRow);
+        } else {
+            $channelIndicator = getChannelIndicator($msgRow);
+        }
+
         $senderStyle = getStyle($conn, $msgRow['sender']);  // Style for the sender
         $dt = (new DateTime($msgRow['dt']))->format('m-d H:i:s');
 
         echo "<p class='user_messages'>";
         echo "<small class='msg-dt'>" . $dt . " || </small>";
-        echo "<span class='msg-sender' $senderStyle> $channelIndicator </span>";
+
+        echo "<span class='msg-sender' > $channelIndicator </span>";
+
+        if ($msgRow['pm'] != 1) {
+            echo "<span class='msg-sender' $senderStyle> {$msgRow['sender']} </span>";
+        }
 
         // Check if the message is tagged
         if ($msgRow['tag'] == 1) {

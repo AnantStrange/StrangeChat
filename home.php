@@ -44,7 +44,7 @@
 <?php
 
 function showErrorAlert($message) {
-    echo '<div class="alert alert-danger" role="alert">' . $message . '</div>';
+    echo '<div class="alert alert-danger" role="alert"><h3>' . $message . '</h3></div>';
 }
 
 function showSuccessAlert($message) {
@@ -128,21 +128,35 @@ function setSession($conn, $userName) {
     $_SESSION['visibilityLevel'] = $visibilityLevels[$userRole];
 }
 
-function setColor($conn, $userName, $userColor, $availableColors) {
-    if ($userColor === 'random') {
-        $userColor = $availableColors[array_rand($availableColors)];
-    }
-
-    $sqlUpdateColor = "
-        INSERT INTO user_settings (username, setting)
-        VALUES (?, JSON_SET('{}', '$.userColor', ?))
-        ON DUPLICATE KEY UPDATE setting = JSON_SET(setting, '$.userColor', ?)
+function setColor($conn, $userName, $userColor) {
+    // Check if the fontColor key exists in the setting column
+    $sqlCheckColor = "
+        SELECT JSON_CONTAINS_PATH(setting, 'one', '$.fontColor') AS color_exists
+        FROM user_settings
+        WHERE username = ?
     ";
 
-    $stmt = $conn->prepare($sqlUpdateColor);
-    $stmt->bind_param("sss", $userName, $userColor, $userColor);
-    $stmt->execute();
-    $stmt->close();
+    $colorExists = false;
+    $stmtCheck = $conn->prepare($sqlCheckColor);
+    $stmtCheck->bind_param("s", $userName);
+    $stmtCheck->execute();
+    $stmtCheck->bind_result($colorExists);
+    $stmtCheck->fetch();
+    $stmtCheck->close();
+
+    // If fontColor key doesn't exist, perform the update
+    if (!$colorExists) {
+        $sqlUpdateColor = "
+            INSERT INTO user_settings (username, setting)
+            VALUES (?, JSON_SET('{}', '$.fontColor', ?))
+            ON DUPLICATE KEY UPDATE setting = JSON_SET(setting, '$.fontColor', ?)
+        ";
+
+        $stmt = $conn->prepare($sqlUpdateColor);
+        $stmt->bind_param("sss", $userName, $userColor, $userColor);
+        $stmt->execute();
+        $stmt->close();
+    }
 }
 
 function validateUser($conn, $userName) {
@@ -184,13 +198,13 @@ function validateUser($conn, $userName) {
 
             header("location:/chat.php");
         } catch (InvalidCaptchaException $e) {
-            echo "Captcha validation failed";
+            showErrorAlert("Captcha validation failed");
         } catch (UserNotExistException $e) {
-            echo "User does not exist. Validation stopped.";
+            showErrorAlert("User does not exist. Validation stopped.");
         } catch (InvalidPasswordException $e) {
-            echo "Password validation failed";
+            showErrorAlert("Password validation failed");
         } catch (UserNotAllowedException $e) {
-            echo "User is Kicked";
+            showErrorAlert("User is Kicked");
         } catch (Exception $e) {
             echo "An unexpected error occurred. Response for other errors.";
             echo "\nException Details:\n";
@@ -234,9 +248,11 @@ function validateUser($conn, $userName) {
 
             ?>
             <input type="text" id="captcha" name="captcha" placeholder="Enter Captcha"></input>
-
             <p class="grid-col-span-2" id="pickColor">Pick a Color</p>
-            <input type="color" name="userColor" id="userColor"class="grid-col-span-2 margin-auto">
+            <?php
+            $randomColor = '#' . substr(md5(rand()), 0, 6);
+            echo '<input type="color" name="userColor" id="userColor" class="grid-col-span-2 margin-auto" value="' . $randomColor . '">';
+            ?>
             <button type="submit" class="grid-col-span-2 margin-auto">Enter Chat</button>
 
         </div>

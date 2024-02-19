@@ -1,4 +1,5 @@
 <!doctype html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -54,6 +55,25 @@ function getRefreshRate() {
     return $result;
 }
 
+function getColor($userName) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT JSON_UNQUOTE(JSON_EXTRACT(setting, '$.userColor')) as userColor FROM user_settings WHERE username = ?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+
+    $result = null;
+    $stmt->bind_result($result);
+
+    if ($stmt->fetch()) {
+        return $result;
+    } else {
+        return "white";
+    }
+
+    $stmt->close();
+    return $result;
+}
+
 function printUserListByRole($conn, $userRole) {
     $query = "SELECT u.username FROM users u JOIN users_logged_in uli ON u.username = uli.username WHERE u.userRole = ?";
     $stmt = $conn->prepare($query);
@@ -66,7 +86,8 @@ function printUserListByRole($conn, $userRole) {
     if (mysqli_num_rows($result) > 0) {
         echo "<h3>" . ucfirst($userRole) . "s</h3>";
         while ($row = $result->fetch_assoc()) {
-            echo "<p class='user_list_p'>" . $row['username'] . "</p>";
+            $color = getColor($row['username']);
+            echo "<p class='user_list_p' style='color: $color;'>" . $row['username'] . "</p>";
             echo "<hr>";
         }
         echo "<br><br>";

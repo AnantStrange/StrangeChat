@@ -1,8 +1,8 @@
-@import "colors.css";
+@import 'colors.css';
 
 body {
-  background-color: #181a1b;
-  color: white;
+  display: flex; /* Use flexbox layout for body */
+  flex-direction: column; /* Stack children vertically */
 }
 
 #chat_header_iframe {
@@ -11,32 +11,21 @@ body {
 
 .midsec {
   display: flex;
-  height: 80vh;
+  flex: 1; /* Grow to take up remaining space */
 }
 
 #chat_message_iframe {
   width: 80%;
-  height: 100%;
 }
 
 #chat_aside_iframe {
   width: 20%;
-  height: 100%;
 }
 
 iframe {
+  box-shadow: none;
+  border-style: solid;
   border-color: var(--theme-color);
   width: 100%;
   height: 100%;
-}
-
-#footer {
-  background-color: black;
-  display: block;
-  width: fit-content;
-  margin: auto;
-}
-
-#footer {
-  color: black;
 }

@@ -67,7 +67,7 @@ function setColor($conn, $userName, $userColor, $availableColors) {
 }
 
 function validateUserName($username) {
-    if (!preg_match('/^[a-zA-Z0-9]+$/', $username)) {
+    if (!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {
         throw new InvalidUsernameException("Username should not contain any special characters or spaces!");
     }
 }

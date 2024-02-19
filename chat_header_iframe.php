@@ -1,4 +1,5 @@
 <!doctype html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -12,8 +13,13 @@
 
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/partials/_dbconnect.php");
-    $userName = $_SESSION['userName'];
-    $userRole = $_SESSION['userRole'];
+    if (isset($_SESSION['userName'])) {
+        $userName = $_SESSION['userName'];
+        $userRole = $_SESSION['userRole'];
+    } else {
+        echo "kicked";
+        die();
+    }
     $multiLine = false;
 
     $visibilityLevels = [
@@ -26,12 +32,12 @@
 
     $defaultVisibility = 3;
     $visibilityThreshold = isset($visibilityLevels[$userRole]) ? $visibilityLevels[$userRole] : $defaultVisibility;
+    checkAndUpdateActivity();
     ?>
 </head>
 <?php
 
-function back_to_home($session) {
-    /* mysqli_close($db); */
+function destroySession($session) {
 
     // save current admin session (optional).
     $admin_session = session_id();
@@ -47,17 +53,11 @@ function back_to_home($session) {
     $_SESSION = [];
     // save and close that session.
     session_write_close();
-
-    // Optional if you need to resume admin session:
-
     // reload admin session id
     session_id($admin_session);
     // restart admin session. . ..
     session_start();
 
-    // header should go to a specific file. 
-    /* header('Location: ../index.php'); */
-    exit;
 }
 
 function getUserIdByUsername($conn, $userName) {
@@ -78,7 +78,6 @@ function getUserIdByUsername($conn, $userName) {
 
 function handleKick($conn) {
     $userRole = $_SESSION['userRole'];
-    /* $userName = $_SESSION['userRole']; */
     global $visibilityLevels;
     if (in_array($userRole, ["guest", "member"])) {
         return;
@@ -130,7 +129,7 @@ function handleKick($conn) {
     $sessionId = $result->fetch_assoc()['session_id'];
     $stmt->close();
 
-    back_to_home($sessionId);
+    destroySession($sessionId);
 
     if ($_POST['purge'] = "purge") {
         $stmt = $conn->prepare("delete from messages where sender=?");
@@ -178,9 +177,44 @@ function insertPms($conn, $msgId, $pmedUser) {
     $stmt->close();
 }
 
-function handleMsg($conn) {
+function usernameExistsInDatabase($username) {
+    global $conn;
+    $stmt = $conn->prepare("SELECT id FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $stmt->store_result();
+    $stmt->bind_result($id);
+    $stmt->fetch();
+    $result = $stmt->num_rows > 0; // Store the result of the query
+    $stmt->close(); // Close the statement
+    return $result; // Return the stored result
+}
+
+// Function to check and update user activity
+function checkAndUpdateActivity() {
+    global $userName, $conn;
+    $currentTime = time();
+    $timeout = 15 * 60; // 15 minutes in seconds
+
+    // Update last activity timestamp in the database
+    $query = "UPDATE users_logged_in SET last_activity = FROM_UNIXTIME(?) WHERE username = ?";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("is", $currentTime, $userName);
+    $stmt->execute();
+    $stmt->close();
+
+    // Check for inactive users
+    $inactiveThreshold = $currentTime - $timeout;
+    $query = "DELETE FROM users_logged_in WHERE last_activity < FROM_UNIXTIME(?)";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $inactiveThreshold);
+    $stmt->execute();
+    $stmt->close();
+}
+
+function handleMsg() {
     global $visibilityLevels;
-    global $userName;
+    checkAndUpdateActivity();
 
     $sendTo = $_POST['sendto'];
     $message = $_POST['message'];
@@ -195,8 +229,14 @@ function handleMsg($conn) {
     }
 
     // Check for @username tags
+    // update this if statement to also check if he username is available in the db to set isTag = 1 
     if (preg_match_all('/@(\w+)/', $message, $tags)) {
-        $isTag = 1;
+        foreach ($tags[1] as $username) {
+            if (usernameExistsInDatabase($username)) {
+                $isTag = 1;
+                break; // No need to continue if at least one valid username is found
+            }
+        }
     }
 
     // -1 visibilityLevel denotes a pm, 
@@ -206,14 +246,19 @@ function handleMsg($conn) {
         $visibilityLevel = -1;
     }
 
+    if ($sendTo == "suggestion") {
+        insertSuggestions($message);
+    } else {
+        insertMsg($sendTo, $visibilityLevel, $isPm, $isTag, $message, $tags);
+    }
+}
+
+function insertMsg($sendTo, $visibilityLevel, $isPm, $isTag, $message, $tags) {
+    global $conn, $userName;
+
     $stmt = $conn->prepare("INSERT INTO messages (sender, receiver, visibility_level, pm, tag, text) VALUES (?, ?, ?, ?, ?, ?)");
     $stmt->bind_param("sssiis", $userName, $sendTo, $visibilityLevel, $isPm, $isTag, $message);
     $stmt->execute();
-    if ($stmt->errno) {
-        echo "Error executing statement: " . $stmt->error;
-    } else {
-        /* echo "Insert successful"; */
-    }
     $stmt->close();
 
     $msgId = $conn->insert_id;
@@ -227,6 +272,19 @@ function handleMsg($conn) {
         insertPms($conn, $msgId, $sendTo);
     }
 }
+
+function insertSuggestions($message) {
+    global $conn, $userName;
+
+    $stmt = $conn->prepare("INSERT INTO suggestions (username,suggestion) VALUES (?, ?)");
+    $stmt->bind_param("ss", $userName, $message);
+    $stmt->execute();
+    $stmt->close();
+
+    $msg = "Suggestion Taken ! thanks @" . $userName;
+    insertMsg("void", -1, 1, 0, $msg, []);
+}
+
 
 ?>
 
@@ -302,10 +360,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="submit" name="action" value="sendto">Send to</button>
             <select name="sendto" size="1">
                 <option value="everyone">-All chatters-</option>
-                <option value="member">-Member only-</option>
                 <option value="mod">-Mods only-</option>
                 <option value="staff">-Staff only-</option>
                 <option value="admin">-Admin only-</option>
+                <option value="suggestion">Suggestion Box</option>
+                <option value="void">void</option>
                 <?php
 
                 $sql = "SELECT username FROM users_logged_in";

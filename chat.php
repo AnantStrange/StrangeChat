@@ -7,10 +7,6 @@
     <link rel="stylesheet" href="/css/css_reset.css" class="css">
     <link rel="stylesheet" href="/css/chat.css" class="css">
     <title>Home Page</title>
-</head>
-
-
-<body>
 
     <?php
     if (session_status() === PHP_SESSION_NONE) {
@@ -30,10 +26,12 @@
         exit;
     }
 
-
     ?>
 
+</head>
 
+
+<body>
 
     <div id="chat_header_iframe">
         <iframe src="/chat_header_iframe.php"></iframe>
@@ -47,16 +45,7 @@
             <iframe src="/chat_aside_iframe.php"></iframe>
         </div>
 
-
     </div>
-
-    <div id="footer">
-        <form method="post">
-            <button type="submit" name="action" value="settings">Settings</button>
-        </form>
-    </div>
-
-
 
 </body>
 

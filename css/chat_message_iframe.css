@@ -19,3 +19,7 @@ body {
 hr {
   border-color: var(--theme-color);
 }
+
+body::-webkit-scrollbar {
+  display: none;
+}

@@ -29,7 +29,7 @@ CREATE TABLE if not exists `messages` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `sender` varchar(25) NOT NULL,
   `receiver` varchar(10) NOT NULL DEFAULT "guest",
-  `visibility_level` TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  `visibility_level` TINYINT  NOT NULL DEFAULT 3,
   `pm` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
   `tag` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
   `text` text NOT NULL,
@@ -63,11 +63,35 @@ CREATE TABLE IF NOT EXISTS `user_settings` (
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS `notes` (
+CREATE TABLE IF NOT EXISTS `public_notes` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(25) UNIQUE,
   `note` TEXT NOT NULL,
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `personal_notes` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(25) UNIQUE,
+  `note` TEXT NOT NULL,
+  FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `suggestions` (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(25) UNIQUE,
+  `suggestion` TEXT NOT NULL,
+  `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX (`username`),
+  FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO users (username, password, userrole, status)
+VALUES ('void', 'voidpassword', 'admin', 'active');
+
+INSERT INTO users (username, password, userrole, status)
+VALUES ('SuggestionBox', 'suggestionpassword', 'admin', 'active');
+
+
 
 COMMIT;
