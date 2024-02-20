@@ -11,9 +11,13 @@
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
+    if (!isset($_SESSION['userName'])) {
+        header("Location: /home.php");
+    }
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/partials/_navbar.php");
     require_once($root . "/partials/_dbconnect.php");
+    $isPersonalNotes = true;
 
     ?>
 </head>
@@ -40,35 +44,24 @@ $personal_result = $public_stmt->get_result();
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     switch ($_POST['action']) {
 
-        case "roleUpdate":
-            $userName = $_POST['userName'];
-            $userRole = $_POST['userRole'];
-            roleUpdate($userName, $userRole);
+        case "getPersonalNotes":
+            $isPersonalNotes = true;
             break;
-        case "refreshUpdate":
-            $refreshRate = $_POST['refreshRate'];
-            refreshUpdate($refreshRate);
+        case "getPublicNotes":
+            $isPersonalNotes = false;
             break;
-        case "fontUpdate":
-            if ($_POST['customFontColor'] !== "") {
-                $newFontColor = $_POST['customFontColor'];
-            } else {
-                $newFontColor = $_POST['fontColor'];
-            }
-            echo "Font Color: " . $newFontColor;
-            colorUpdate($newFontColor);
+        case "save":
+            break;
+        default:
             break;
     }
 }
-
 
 
 ?>
 
 
 <body>
-
-
     <form action="notes.php">
         <div id="section1">
             <button type="submit" name="action" value="getPersonalNotes">Personal Notes</button>
@@ -78,13 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         <div id="section2">
 
             <?php
-            echo '<div id="personal_notes">';
-            echo '<textarea name="message" placeholder="' . htmlspecialchars($personal_notes) . '"></textarea>';
-            echo '</div>';
 
-            /* while ($public_notes = $public_result->fetch_assoc()['note']) { */
-            /*     echo '<textarea name="message" placeholder="{$personal_notes}"></textarea>'; */
-            /* } */
+            if ($isPersonalNotes) {
+                echo '<div id="personal_notes">';
+                echo '<textarea name="message" placeholder="' . htmlspecialchars($personal_notes) . '"></textarea>';
+                echo '</div>';
+            } else {
+                while ($public_notes = $public_result->fetch_assoc()['note']) {
+                    echo '<textarea name="message" placeholder="{$personal_notes}"></textarea>';
+                }
+            }
+
             ?>
         </div>
         <div id="footer">

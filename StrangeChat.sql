@@ -28,7 +28,7 @@ CREATE TABLE if not exists `users_logged_in` (
 CREATE TABLE if not exists `messages` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `sender` varchar(25) NOT NULL,
-  `receiver` varchar(10) NOT NULL DEFAULT "guest",
+  `receiver` varchar(25) NOT NULL DEFAULT "guest",
   `visibility_level` TINYINT  NOT NULL DEFAULT 3,
   `pm` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,
   `tag` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0,

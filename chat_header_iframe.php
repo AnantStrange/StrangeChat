@@ -39,7 +39,7 @@
 
 function destroySession($session) {
 
-    // save current admin session (optional).
+    // save current admin session
     $admin_session = session_id();
     // get target id.
     $session_id_to_destroy = $session;
@@ -57,7 +57,6 @@ function destroySession($session) {
     session_id($admin_session);
     // restart admin session. . ..
     session_start();
-
 }
 
 function getUserIdByUsername($conn, $userName) {
@@ -76,7 +75,8 @@ function getUserIdByUsername($conn, $userName) {
     }
 }
 
-function handleKick($conn) {
+function handleKick() {
+    global $conn;
     $userRole = $_SESSION['userRole'];
     global $visibilityLevels;
     if (in_array($userRole, ["guest", "member"])) {
@@ -169,11 +169,6 @@ function insertPms($conn, $msgId, $pmedUser) {
     $stmt->bind_param("ii", $msgId, $pmedUserId);
     $stmt->execute();
 
-    if ($stmt->errno) {
-        echo "Error executing statement: " . $stmt->error;
-    } else {
-        /* echo "Insert successful"; */
-    }
     $stmt->close();
 }
 
@@ -212,16 +207,23 @@ function checkAndUpdateActivity() {
     $stmt->close();
 }
 
-function handleMsg() {
+function handleMsg($sendTo = null, $message = null, $sendBy = null) {
     global $visibilityLevels;
     checkAndUpdateActivity();
 
-    $sendTo = $_POST['sendto'];
-    $message = $_POST['message'];
+    // If $sendTo, $message, and $sendBy are provided, use them directly
+    if ($sendTo !== null && $message !== null) {
+        // Process $sendTo, $message, and $sendBy as needed
+    } else {
+        // If not provided, fallback to $_POST values
+        $sendTo = $sendTo ?? (isset($_POST['sendto']) ? $_POST['sendto'] : null);
+        $message = $message ?? (isset($_POST['message']) ? $_POST['message'] : null);
+    }
     $allowedValues = array("everyone", "mod", "member", "staff", "admin");
     $isPm = 0;
     $isTag = 0;
     $tags = [];
+
 
     // Check for pms 
     if (!in_array($sendTo, $allowedValues)) {
@@ -249,15 +251,34 @@ function handleMsg() {
     if ($sendTo == "suggestion") {
         insertSuggestions($message);
     } else {
-        insertMsg($sendTo, $visibilityLevel, $isPm, $isTag, $message, $tags);
+        insertMsg(
+            $sendTo,
+            $visibilityLevel,
+            $isPm,
+            $isTag,
+            $message,
+            $tags,
+            $sendBy
+        );
     }
 }
 
-function insertMsg($sendTo, $visibilityLevel, $isPm, $isTag, $message, $tags) {
+function insertMsg(
+    $sendTo,
+    $visibilityLevel,
+    $isPm,
+    $isTag,
+    $message,
+    $tags,
+    $sendBy
+) {
     global $conn, $userName;
+    var_dump($sendTo);
+
+    $sender = $sendBy !== null ? $sendBy : $userName;
 
     $stmt = $conn->prepare("INSERT INTO messages (sender, receiver, visibility_level, pm, tag, text) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssiis", $userName, $sendTo, $visibilityLevel, $isPm, $isTag, $message);
+    $stmt->bind_param("sssiis", $sender, $sendTo, $visibilityLevel, $isPm, $isTag, $message);
     $stmt->execute();
     $stmt->close();
 
@@ -274,15 +295,11 @@ function insertMsg($sendTo, $visibilityLevel, $isPm, $isTag, $message, $tags) {
 }
 
 function insertSuggestions($message) {
-    global $conn, $userName;
+    global $userName;
 
-    $stmt = $conn->prepare("INSERT INTO suggestions (username,suggestion) VALUES (?, ?)");
-    $stmt->bind_param("ss", $userName, $message);
-    $stmt->execute();
-    $stmt->close();
-
-    $msg = "Suggestion Taken ! thanks @" . $userName;
-    insertMsg("void", -1, 1, 0, $msg, []);
+    $msg = "Suggestion Taken! Thank you @" . $userName . " :)";
+    handleMsg($userName, $msg, "SuggestionBox");
+    handleMsg("SuggestionBox", $message);
 }
 
 
@@ -299,9 +316,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($action) {
         case 'sendto':
             if (isset($_POST['kick']) && $_POST["kick"] == "kick") {
-                handleKick($conn);
+                handleKick();
             } else {
-                handleMsg($conn);
+                handleMsg();
             }
             break;
 
