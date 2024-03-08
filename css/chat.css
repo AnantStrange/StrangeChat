@@ -5,6 +5,10 @@ body {
   flex-direction: column; /* Stack children vertically */
 }
 
+body::-webkit-scrollbar {
+  display: none;
+}
+
 #chat_header_iframe {
   height: 61px;
 }

@@ -1,7 +1,6 @@
 @import 'colors.css';
 
 body {
-  border: 2px solid red;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -19,13 +18,12 @@ body {
 }
 
 #section2 {
-  border: 2px solid blue;
   flex: 1;
   display: flex; /* Add flex display to make child elements stretch */
   flex-direction: column; /* Stack child elements vertically */
 }
 
-#personal_notes {
+#personal_notes{
   width: 80%;
   margin: 20px auto;
   border: 2px solid var(--theme-color);
@@ -36,6 +34,46 @@ body {
 }
 
 #personal_notes textarea {
+  color: white;
+  font-color: white;
+  flex: 1;
+  border-radius: 13px;
+  padding: 10px;
+  width: 100%;
+}
+
+#public_notes{
+  width: 80%;
+  margin: 20px auto;
+  border: 2px solid var(--theme-color);
+  flex: 1; /* Make personal_notes fill the remaining space */
+  display: flex; /* Add flex display to make child elements stretch */
+  flex-direction: column; /* Stack child elements vertically */
+  border-radius: 15px;
+}
+
+#public_notes textarea {
+  color: white;
+  font-color: white;
+  flex: 1;
+  border-radius: 13px;
+  padding: 10px;
+  width: 100%;
+}
+
+#publics_notes{
+  width: 80%;
+  margin: 20px auto;
+  border: 2px solid var(--theme-color);
+  flex: 1; /* Make personal_notes fill the remaining space */
+  display: flex; /* Add flex display to make child elements stretch */
+  flex-direction: column; /* Stack child elements vertically */
+  border-radius: 15px;
+}
+
+#publics_notes textarea {
+  color: white;
+  font-color: white;
   flex: 1;
   border-radius: 13px;
   padding: 10px;
@@ -43,7 +81,7 @@ body {
 }
 
 #footer {
-  text-align: center;
+  text-align: center !important;
 }
 
 #footer button {
@@ -63,3 +101,11 @@ textarea {
   width: 100%;
   height: 100%;
 }
+
+
+#username{
+    margin:auto;
+}
+
+
+

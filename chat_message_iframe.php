@@ -194,13 +194,13 @@ function getMessages($conn) {
                 $afterTagged = isset($parts[1]) ? $parts[1] : '';  // Text after the tagged username
 
                 echo " => ";
-                echo "<span class='msg-text' $senderStyle>$beforeTagged</span>"; // Text before the tagged username with sender's color
-                echo "<span class='tagged-username' style='color: $taggedUserColor;'>@$taggedUserName</span>"; // Tagged username with tagged user's color
-                echo "<span class='msg-text' $senderStyle>$afterTagged</span>"; // Text after the tagged username with sender's color
+                echo "<span class='msg-text' $senderStyle>" . htmlspecialchars($beforeTagged, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "</span>"; // Text before the tagged username with sender's color
+                echo "<span class='tagged-username' style='color: $taggedUserColor;'>" . htmlspecialchars("@$taggedUserName", ENT_QUOTES | ENT_HTML5, 'UTF-8') . "</span>"; // Tagged username with tagged user's color
+                echo "<span class='msg-text' $senderStyle>" . htmlspecialchars($afterTagged, ENT_QUOTES | ENT_HTML5, 'UTF-8') . "</span>"; // Text after the tagged username with sender's color
             }
         } else {
             echo " => ";
-            echo "<span class='msg-text' $senderStyle>" . $msgRow['text'] . "</span>"; // Regular text with sender's color
+            echo "<span class='msg-text' $senderStyle>" . htmlspecialchars($msgRow['text'], ENT_QUOTES | ENT_HTML5, 'UTF-8') . "</span>"; // Regular text with sender's color
         }
 
         echo "</p>";

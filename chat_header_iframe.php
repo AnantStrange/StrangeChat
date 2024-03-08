@@ -51,6 +51,7 @@ function destroySession($session) {
     session_start();
     // clean all session data in target session.
     $_SESSION = [];
+    $_SESSION['status'] = "kicked";
     // save and close that session.
     session_write_close();
     // reload admin session id
@@ -273,7 +274,6 @@ function insertMsg(
     $sendBy
 ) {
     global $conn, $userName;
-    var_dump($sendTo);
 
     $sender = $sendBy !== null ? $sendBy : $userName;
 

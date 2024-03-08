@@ -41,7 +41,7 @@ function refreshRateSetting() {
     $refreshRate = getRefreshRate();
     echo '<form action="settings.php" method="post">';
     echo "<label for='refreshRate'>RefreshRate(s) :</label>";
-    echo '<input type="number" name="refreshRate" size="3" min="5" max="150" value="'.$refreshRate.'">';
+    echo '<input type="number" name="refreshRate" size="3" min="5" max="150" value="' . $refreshRate . '">';
     echo '<button type="submit" name="action" value="refreshUpdate">Update</button>';
     echo '</form>';
 }
@@ -82,8 +82,8 @@ username=?");
 
 function roleUpdateSetting($conn) {
     echo '<form action="settings.php" method="post">';
-    echo "<label for='username'>Role Update</label>";
-    echo "<select name='username' size='1'>";
+    echo "<label for='userName'>Role Update</label>";
+    echo "<select name='userName' size='1'>";
 
     $sql = "SELECT username FROM users";
     $stmt = $conn->prepare($sql);
@@ -168,7 +168,7 @@ function admin_settings($conn) {
 
 function roleUpdate($userName, $userRole) {
     global $conn;
-    $stmt = $conn->prepare("set role = ? where username = ?");
+    $stmt = $conn->prepare("UPDATE users SET userrole = ? WHERE username = ?");
     $stmt->bind_param("ss", $userRole, $userName);
     $stmt->execute();
 }

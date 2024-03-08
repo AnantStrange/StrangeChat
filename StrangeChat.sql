@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS `public_notes` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(25) UNIQUE,
   `note` TEXT NOT NULL,
+  `last_update` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -74,6 +75,7 @@ CREATE TABLE IF NOT EXISTS `personal_notes` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(25) UNIQUE,
   `note` TEXT NOT NULL,
+  `last_update` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -91,6 +93,13 @@ VALUES ('void', 'voidpassword', 'admin', 'active');
 
 INSERT INTO users (username, password, userrole, status)
 VALUES ('SuggestionBox', 'suggestionpassword', 'admin', 'active');
+
+CREATE TABLE GPG_Keys (
+  `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  `username` VARCHAR(25) UNIQUE,
+  `key` TEXT NOT NULL,
+  FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
 

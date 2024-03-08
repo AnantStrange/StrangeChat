@@ -30,6 +30,7 @@ $currentPage = basename($currentUrl, '.php'); // Get the filename without the ex
             } elseif (isset($_SESSION['userName'])) {
                 echo '
                 <li><a href="/chat.php" class="' . ($currentPage == 'chat' ? 'active' : '') . '">Chat</a></li>
+            <li><a href="/profile.php" class="' . ($currentPage == 'profile' ? 'active' : '') . '">Profile</a></li>
             <li><a href="/notes.php" class="' . ($currentPage == 'notes' ? 'active' : '') . '">Notes</a></li>
             <li><a href="/settings.php" class="' . ($currentPage == 'settings' ? 'active' : '') . '">Settings</a></li>';
             }
