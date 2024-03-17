@@ -19,6 +19,7 @@
 ### Do NOT clutter the chat with commands and spam.
 > - Send the bot commands to @void.
 > - Continous Spamming even after warning will get u banned.
+> - No one likes a spammer.
 
 ### Got scammed?
 > - Well sorry to hear that, but suck it up & Learn the lesso.
