@@ -197,6 +197,18 @@ function colorUpdate($newFontColor) {
     }
 }
 
+function hideUpdate($hide) {
+    global $conn;
+    $username = $_SESSION['userName'];
+    $stmt = $conn->prepare("UPDATE user_settings SET setting = JSON_SET(setting, '$.hide', ?) WHERE username = ?");
+    $stmt->bind_param("ss", $hide, $username);
+    $stmt->execute();
+    if ($stmt->affected_rows > 0) {
+        return "Hide updated successfully";
+    } else {
+        return "Failed to update hide";
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     switch ($_POST['action']) {
@@ -218,6 +230,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             echo "Font Color: " . $newFontColor;
             colorUpdate($newFontColor);
+            break;
+        case "hideUpdate":
+            $hide = $_POST['hide'];
+            hideUpdate($hide);
             break;
     }
 }

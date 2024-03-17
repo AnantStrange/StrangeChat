@@ -1,4 +1,5 @@
 <!doctype html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -74,19 +75,26 @@ function getColor($userName) {
 }
 
 function printUserListByRole($conn, $userRole) {
-    $query = "SELECT u.username FROM users u JOIN users_logged_in uli ON u.username = uli.username WHERE u.userRole = ?";
+    $query = "SELECT u.username, us.hide_enabled
+              FROM users u
+              JOIN users_logged_in uli ON u.username = uli.username
+              LEFT JOIN user_settings us ON u.username = us.username
+              WHERE u.userRole = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("s", $userRole);
     $stmt->execute();
     $result = $stmt->get_result();
     $stmt->close();
 
-
     if (mysqli_num_rows($result) > 0) {
         echo "<h3>" . ucfirst($userRole) . "s</h3>";
         while ($row = $result->fetch_assoc()) {
             $color = getColor($row['username']);
-            echo "<p class='user_list_p' style='color: $color;'>" . $row['username'] . "</p>";
+
+            if (!$row['hide_enabled']) {
+                echo "<p class='user_list_p' style='color: $color;'>" . $row['username'] . "</p>";
+            }
+
             echo "<hr>";
         }
         echo "<br><br>";

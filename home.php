@@ -126,6 +126,7 @@ function setSession($conn, $userName) {
     $_SESSION['userName'] = $userName;
     $_SESSION['userRole'] = $userRole;
     $_SESSION['visibilityLevel'] = $visibilityLevels[$userRole];
+    $_SESSION['in_waitroom'] = false;
 }
 
 function setColor($conn, $userName, $userColor) {
@@ -171,6 +172,18 @@ function validateUser($conn, $userName) {
     return true;
 }
 
+function waitroom() {
+    global $conn;
+    $stmt = $conn->prepare("select waitroom from server_settings");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $result = $result->fetch_assoc()['waitroom'];
+    if ($result == 1) {
+        return true;
+    }
+    return false;
+}
+
 ?>
 
 
@@ -196,7 +209,13 @@ function validateUser($conn, $userName) {
             setColor($conn, $userName, $userColor, $availableColors);
             addUserLogIn($conn, $userName);
 
-            header("location:/chat.php");
+            if (waitroom()) {
+                $_SESSION['in_waitroom'] = true;
+                header("location:/waitroom.php");
+            } else {
+                $_SESSION['in_waitroom'] = false;
+                header("location:/chat.php");
+            }
         } catch (InvalidCaptchaException $e) {
             showErrorAlert("Captcha validation failed");
         } catch (UserNotExistException $e) {

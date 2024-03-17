@@ -16,6 +16,10 @@
         header("location:/home.php");
         exit();
     }
+    if (isset($_SESSION['in_waitroom']) && $_SESSION['in_waitroom']) {
+        header("location:/waitroom.php");
+        exit();
+    }
 
     $root = $_SERVER['DOCUMENT_ROOT'];
     $username = $_SESSION['userName'];

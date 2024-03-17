@@ -1,7 +1,6 @@
 <?php
 $root = $_SERVER['DOCUMENT_ROOT'];
 
-
 $servername = "localhost";  // Replace with your database server host
 $username = "StrangeChat";  // Replace with your database username
 $password = "StrangeChat";  // Replace with your database password
