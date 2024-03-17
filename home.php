@@ -209,13 +209,14 @@ function waitroom() {
             setColor($conn, $userName, $userColor, $availableColors);
             addUserLogIn($conn, $userName);
 
-            if (waitroom()) {
-                $_SESSION['in_waitroom'] = true;
-                header("location:/waitroom.php");
-            } else {
-                $_SESSION['in_waitroom'] = false;
-                header("location:/chat.php");
-            }
+            /* if (waitroom()) { */
+            /*     $_SESSION['in_waitroom'] = true; */
+            /*     header("location:/waitroom.php"); */
+            /* } else { */
+            /*     $_SESSION['in_waitroom'] = false; */
+            /*     header("location:/chat.php"); */
+            /* } */
+            header("location:/chat.php");
         } catch (InvalidCaptchaException $e) {
             showErrorAlert("Captcha validation failed");
         } catch (UserNotExistException $e) {
