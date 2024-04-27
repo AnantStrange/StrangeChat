@@ -134,13 +134,15 @@ function addUser($conn, $userName, $password, $userRole) {
 
             header("location:/home.php");
         } catch (Exception $e) {
-            echo "An unexpected error occurred. Response for other errors.";
-            // Print or log details of the caught exception
-            echo "\nException Details:\n";
-            echo "Message: " . $e->getMessage() . "\n";
-            echo "Code: " . $e->getCode() . "\n";
-            echo "File: " . $e->getFile() . "\n";
-            echo "Line: " . $e->getLine() . "\n";
+            // Log the exception details
+            $logMessage = "An unexpected error occurred. Response for other errors.\n";
+            $logMessage .= "Exception Details:\n";
+            $logMessage .= "Message: " . $e->getMessage() . "\n";
+            $logMessage .= "Code: " . $e->getCode() . "\n";
+            $logMessage .= "File: " . $e->getFile() . "\n";
+            $logMessage .= "Line: " . $e->getLine() . "\n";
+
+            error_log($logMessage);
         }
     }
 

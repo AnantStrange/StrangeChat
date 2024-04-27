@@ -7,12 +7,18 @@ $root = $_SERVER['DOCUMENT_ROOT'];
 require_once($root . "/partials/_navbar.php");
 require_once($root . "/partials/_dbconnect.php");
 
-$username = $_SESSION['userName'];
-$sql = "DELETE FROM users_logged_in WHERE users_logged_in.username = ?";
+$userName = $_SESSION['userName'];
+$sql = "DELETE FROM sessions WHERE userName = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $username);
+$stmt->bind_param("s", $userName);
 $stmt->execute();
+
+$sql = "update users set status='offline' where username=?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $userName);
+$stmt->execute();
+
 $stmt->close();
 
 $_SESSION = array();

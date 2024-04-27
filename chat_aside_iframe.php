@@ -18,6 +18,10 @@
     $userName = $_SESSION['userName'];
     $userRole = $_SESSION['userRole'];
 
+    if (isset($_SESSION['kicked']) && $_SESSION['kicked'] == 1){
+        die("YOu have been Kicked");
+    }
+
     $isKicked = '';
     $stmt = $conn->prepare("SELECT status FROM users WHERE username = ?");
     $stmt->bind_param("s", $userName);
@@ -77,7 +81,7 @@ function getColor($userName) {
 function printUserListByRole($conn, $userRole) {
     $query = "SELECT u.username, us.hide_enabled
               FROM users u
-              JOIN users_logged_in uli ON u.username = uli.username
+              JOIN sessions uli ON u.username = uli.username
               LEFT JOIN user_settings us ON u.username = us.username
               WHERE u.userRole = ?";
     $stmt = $conn->prepare($query);

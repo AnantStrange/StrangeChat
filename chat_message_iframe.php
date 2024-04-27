@@ -17,11 +17,14 @@
     $root = $_SERVER['DOCUMENT_ROOT'];
     require_once($root . "/partials/_dbconnect.php");
 
+    if (isset($_SESSION['kicked']) && $_SESSION['kicked'] == 1){
+        die("You have been kicked");
+    }
     if (isset($_SESSION['userName'])) {
         $userName = $_SESSION['userName'];
         $userRole = $_SESSION['userRole'];
     } else {
-        echo "kicked";
+        echo "Not Logged In";
         die();
     }
 

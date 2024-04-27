@@ -84,11 +84,9 @@ function validatePassword($password, $passHash) {
     return true;
 }
 
-
-
 function addUserLogIn($conn, $userName) {
 
-    $user_check_sql = "SELECT * FROM `users_logged_in` WHERE `username` = ?";
+    $user_check_sql = "SELECT * FROM `sessions` WHERE `username` = ?";
     $stmt = mysqli_prepare($conn, $user_check_sql);
     mysqli_stmt_bind_param($stmt, "s", $userName);
     mysqli_stmt_execute($stmt);
@@ -96,7 +94,7 @@ function addUserLogIn($conn, $userName) {
 
     $sessionId = session_id();
     if (mysqli_stmt_num_rows($stmt) == 0) {
-        $user_insert_sql = "INSERT INTO `users_logged_in` (`username`, `session_id`) VALUES (?,?)";
+        $user_insert_sql = "INSERT INTO `sessions` (`username`, `session_id`) VALUES (?,?)";
         $stmt_insert = mysqli_prepare($conn, $user_insert_sql);
         mysqli_stmt_bind_param($stmt_insert, "ss", $userName, $sessionId);
         mysqli_stmt_execute($stmt_insert);
@@ -209,14 +207,31 @@ function waitroom() {
             setColor($conn, $userName, $userColor, $availableColors);
             addUserLogIn($conn, $userName);
 
-            /* if (waitroom()) { */
-            /*     $_SESSION['in_waitroom'] = true; */
-            /*     header("location:/waitroom.php"); */
-            /* } else { */
-            /*     $_SESSION['in_waitroom'] = false; */
-            /*     header("location:/chat.php"); */
-            /* } */
-                header("location:/chat.php");
+            $stmt = $conn->prepare("SELECT waitroom FROM server_settings");
+            $stmt->execute();
+            $stmt->bind_result($waitroom);
+            $stmt->fetch();
+            $stmt->close();
+
+            if ($waitroom == 1) {
+                $stmt = $conn->prepare("UPDATE users SET status='waitroom' WHERE username = ?");
+                $stmt->bind_param("s", $userName);
+                $stmt->execute();
+                $stmt->close();
+
+                header("Location: /waitroom.php");
+                die();
+            } else {
+                $stmt = $conn->prepare("UPDATE users SET status = 'online' WHERE username = ?");
+                $stmt->bind_param("s", $username);
+                $stmt->execute();
+                $stmt->close();
+
+                header("Location: /chat.php");
+                die();
+            }
+
+            /* header("location:/chat.php"); */
         } catch (InvalidCaptchaException $e) {
             showErrorAlert("Captcha validation failed");
         } catch (UserNotExistException $e) {
@@ -226,12 +241,20 @@ function waitroom() {
         } catch (UserNotAllowedException $e) {
             showErrorAlert("User is Kicked");
         } catch (Exception $e) {
-            echo "An unexpected error occurred. Response for other errors.";
+            echo "An unexpected error occurred.";
             echo "\nException Details:\n";
             echo "Message: " . $e->getMessage() . "\n";
             echo "Code: " . $e->getCode() . "\n";
             echo "File: " . $e->getFile() . "\n";
             echo "Line: " . $e->getLine() . "\n";
+
+            $logMessage = "An unexpected error occurred. Exception Details: ";
+            $logMessage .= "Message: " . $e->getMessage() . ", ";
+            $logMessage .= "Code: " . $e->getCode() . ", ";
+            $logMessage .= "File: " . $e->getFile() . ", ";
+            $logMessage .= "Line: " . $e->getLine();
+
+            error_log($logMessage);
         }
     }
 

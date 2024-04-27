@@ -16,14 +16,24 @@
         header("location:/home.php");
         exit();
     }
-    if (isset($_SESSION['in_waitroom']) && $_SESSION['in_waitroom']) {
+
+    $root = $_SERVER['DOCUMENT_ROOT'];
+    $userName = $_SESSION['userName'];
+    require_once($root . "/partials/_dbconnect.php");
+
+    $stmt = $conn->prepare("select status from users where username=?");
+    $stmt->bind_param("s", $userName);
+    $stmt->execute();
+    $stmt->bind_result($status);
+    $stmt->fetch();
+    $stmt->close();
+
+    if ($status == "waitroom") {
         header("location:/waitroom.php");
         exit();
     }
 
-    $root = $_SERVER['DOCUMENT_ROOT'];
-    $username = $_SESSION['userName'];
-    require($root . "/partials/_navbar.php");
+    require_once($root . "/partials/_navbar.php");
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'settings') {
         header('Location: settings.php');

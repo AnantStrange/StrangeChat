@@ -17,7 +17,7 @@
         $userName = $_SESSION['userName'];
         $userRole = $_SESSION['userRole'];
     } else {
-        echo "kicked";
+        /* echo "kicked"; */
         die();
     }
     $multiLine = false;
@@ -51,7 +51,7 @@ function destroySession($session) {
     session_start();
     // clean all session data in target session.
     $_SESSION = [];
-    $_SESSION['status'] = "kicked";
+    $_SESSION['kicked'] = 1;
     // save and close that session.
     session_write_close();
     // reload admin session id
@@ -91,12 +91,10 @@ function handleKick() {
     $result = $stmt->get_result();
     $toKickUserRole = $result->fetch_assoc()['userrole'];
     if ($stmt->errno) {
-        echo "Error executing statement: " . $stmt->error;
-    } else {
-        /* echo "Insert successful"; */
+        $errorMessage = "Error executing statement: " . $stmt->error;
+        error_log($errorMessage);
     }
     $stmt->close();
-
 
     $userLevel = $visibilityLevels[$userRole];
     $toKickUserLevel = $visibilityLevels[$toKickUserRole];
@@ -109,25 +107,26 @@ function handleKick() {
     $kickStmt->bind_param("s", $toKick);
     $kickStmt->execute();
     if ($kickStmt->errno) {
-        echo "Error executing statement: " . $stmt->error;
-    } else {
-        /* echo "user kicked bool set in users table"; */
+        $errorMessage = "Error executing statement: " . $kickStmt->error;
+        error_log($errorMessage);
     }
     $kickStmt->close();
-    /* echo "user to kick :" . $toKick . "\n"; */
 
-    $stmt = $conn->prepare("SELECT session_id FROM users_logged_in WHERE username = ?");
+    $stmt = $conn->prepare("SELECT session_id FROM sessions WHERE username = ?");
     $stmt->bind_param("s", $toKick);
     $stmt->execute();
 
     if ($stmt->errno) {
-        echo "Error executing statement: " . $stmt->error;
-    } else {
-        /* echo "purged messages"; */
+        $errorMessage = "Error executing statement: " . $kickStmt->error;
+        error_log($errorMessage);
     }
 
     $result = $stmt->get_result();
     $sessionId = $result->fetch_assoc()['session_id'];
+
+    $stmt = $conn->prepare("delete from sessions where username = ?");
+    $stmt->bind_param("s", $toKick);
+    $stmt->execute();
     $stmt->close();
 
     destroySession($sessionId);
@@ -137,9 +136,8 @@ function handleKick() {
         $stmt->bind_param("s", $toKick);
         $stmt->execute();
         if ($stmt->errno) {
-            echo "Error executing statement: " . $stmt->error;
-        } else {
-            echo "purged messages";
+            $errorMessage = "Error executing statement: " . $kickStmt->error;
+            error_log($errorMessage);
         }
         $stmt->close();
     }
@@ -154,9 +152,8 @@ function insertTags($conn, $msgId, $tags) {
             $stmt->execute();
 
             if ($stmt->errno) {
-                echo "Error executing statement: " . $stmt->error;
-            } else {
-                /* echo "Insert successful"; */
+                $errorMessage = "Error executing statement: " . $stmt->error;
+                error_log($errorMessage);
             }
             $stmt->close();
         }
@@ -193,19 +190,19 @@ function checkAndUpdateActivity() {
     $timeout = 15 * 60; // 15 minutes in seconds
 
     // Update last activity timestamp in the database
-    $query = "UPDATE users_logged_in SET last_activity = FROM_UNIXTIME(?) WHERE username = ?";
+    $query = "UPDATE sessions SET last_activity = FROM_UNIXTIME(?) WHERE username = ?";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("is", $currentTime, $userName);
     $stmt->execute();
     $stmt->close();
 
     // Check for inactive users
-    $inactiveThreshold = $currentTime - $timeout;
-    $query = "DELETE FROM users_logged_in WHERE last_activity < FROM_UNIXTIME(?)";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $inactiveThreshold);
-    $stmt->execute();
-    $stmt->close();
+    /* $inactiveThreshold = $currentTime - $timeout; */
+    /* $query = "DELETE FROM sessions WHERE last_activity < FROM_UNIXTIME(?)"; */
+    /* $stmt = $conn->prepare($query); */
+    /* $stmt->bind_param("i", $inactiveThreshold); */
+    /* $stmt->execute(); */
+    /* $stmt->close(); */
 }
 
 function handleMsg($sendTo = null, $message = null, $sendBy = null) {
@@ -331,11 +328,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("s", $userName);
             $stmt->execute();
             if ($stmt->errno) {
-                echo "Error executing statement: " . $stmt->error;
-            } else {
-                /* echo "Insert successful"; */
+                $errorMessage = "Error executing statement: " . $kickStmt->error;
+                error_log($errorMessage);
             }
-
             $stmt->close();
             break;
 
@@ -345,9 +340,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("s", $userName);
             $stmt->execute();
             if ($stmt->errno) {
-                echo "Error executing statement: " . $stmt->error;
-            } else {
-                /* echo "Insert successful"; */
+                $errorMessage = "Error executing statement: " . $kickStmt->error;
+                error_log($errorMessage);
             }
             $stmt->close();
             break;
@@ -387,7 +381,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <option value="void">void</option>
                 <?php
 
-                $sql = "SELECT username FROM users_logged_in";
+                $sql = "SELECT username FROM sessions";
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
                 $result = $stmt->get_result();

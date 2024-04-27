@@ -11,11 +11,10 @@
     require_once($root . "/partials/_dbconnect.php");
     $userName = $_SESSION['userName'];
     $userRole = $_SESSION['userRole'];
-
+    getRefreshRate();
     ?>
 
 </head>
-
 <?php
 
 function getRefreshRate() {
@@ -25,17 +24,29 @@ function getRefreshRate() {
     $stmt->bind_param("s", $userName);
     $stmt->execute();
 
+    if ($stmt->errno) {
+        $errorMessage = mysqli_error($conn);
+        error_log("getRefreshRate() - got an error : ".$errorMessage);
+        return 10; // Return default value
+    }
+
     $result = null;
     $stmt->bind_result($result);
 
     if ($stmt->fetch()) {
-        return $result;
+        $stmt->close(); // Close the statement
+        if (!empty($result)) {
+            return $result;
+        } else {
+            return 10; // Return default value
+        }
     } else {
-        return 10;
+        $stmt->close(); // Close the statement
+        return 10; // Return default value
     }
-    $stmt->close();
-    return $result;
 }
+
+
 
 function refreshRateSetting() {
     $refreshRate = getRefreshRate();
