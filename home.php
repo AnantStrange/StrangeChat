@@ -216,7 +216,7 @@ function waitroom() {
             /*     $_SESSION['in_waitroom'] = false; */
             /*     header("location:/chat.php"); */
             /* } */
-            header("location:/chat.php");
+                header("location:/chat.php");
         } catch (InvalidCaptchaException $e) {
             showErrorAlert("Captcha validation failed");
         } catch (UserNotExistException $e) {

@@ -3,16 +3,29 @@ SET time_zone = "+00:00";
 
 create database if not exists StrangeChat;
 use StrangeChat;
+-- create database if not exists StrangeDB;
+-- use StrangeDB;
 
 CREATE TABLE if not exists `users` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `username` varchar(25) UNIQUE,
   `password` varchar(256) NOT NULL,
   `userrole` varchar(10) NOT NULL DEFAULT "guest",
-  `status` varchar(10) NOT NULL DEFAULT "active",
+  `status` varchar(10) NOT NULL DEFAULT "nil",
   `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--CREATE TABLE if not exists `sessions` (
+--  `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+--  `username` varchar(25) UNIQUE,
+--  `session_id` varchar(40) NOT NULL UNIQUE,
+--  `dt` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--  last_activity TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--  INDEX (`username`),
+--  INDEX (`session_id`),
+--  FOREIGN KEY (`username`) REFERENCES `users` (`username`) ON DELETE CASCADE ON UPDATE CASCADE
+--) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE if not exists `users_logged_in` (
   `id` SMALLINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

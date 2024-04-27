@@ -220,6 +220,9 @@ function handleMsg($sendTo = null, $message = null, $sendBy = null) {
         $sendTo = $sendTo ?? (isset($_POST['sendto']) ? $_POST['sendto'] : null);
         $message = $message ?? (isset($_POST['message']) ? $_POST['message'] : null);
     }
+    if ($message == "") {
+        return;
+    }
     $allowedValues = array("everyone", "mod", "member", "staff", "admin");
     $isPm = 0;
     $isTag = 0;
